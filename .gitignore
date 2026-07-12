@@ -22,3 +22,6 @@ drizzle/**/*.sql.bak
 # os / editor
 .DS_Store
 *.log
+
+# SDD / port scratch (agents)
+.superpowers/

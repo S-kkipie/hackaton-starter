@@ -6,6 +6,7 @@ cloned from it must follow them too.
 
 - [types-schemas.md](./types-schemas.md) — zod as the single type source; **never re-export types**.
 - [frontend-data-fetching.md](./frontend-data-fetching.md) — Eden proxy; **one factory hook per domain**.
+- [tables-and-forms.md](./tables-and-forms.md) — **data-table toolkit** (useDataTable + RSC) & **TanStack Form** (useAppForm + Field).
 
 ## Architecture recap (where code goes)
 
