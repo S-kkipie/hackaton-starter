@@ -1,11 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type {
-    CreateProject,
-    Project,
-    UpdateProject,
-} from "@/core/project/domain/types";
+import type { UpdateProject } from "@/core/project/domain/types";
 import { useElysia } from "@/frontend/lib/eden";
 
 /** Bind the projects domain once; every call hangs off `client`. */
@@ -58,5 +54,3 @@ export function useDeleteProject() {
         onSuccess: () => queryClient.invalidateQueries({ queryKey: listKey }),
     });
 }
-
-export type { CreateProject, Project, UpdateProject };
