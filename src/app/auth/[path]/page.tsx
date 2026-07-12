@@ -1,22 +1,10 @@
+import { viewPaths } from "@better-auth-ui/core";
 import { notFound } from "next/navigation";
-import { AuthForm, type AuthView } from "./auth-form";
+import { Auth } from "@/frontend/components/auth/auth";
 
-const AUTH_VIEWS = [
-    "sign-in",
-    "sign-up",
-    "forgot-password",
-    "reset-password",
-    "sign-out",
-] as const satisfies readonly AuthView[];
-
-// `@better-auth-ui/react` (installed 1.6.27) ships hooks/mutations only — no
-// prebuilt `AuthCard` — and `AuthForm` reads the reset-password token from
-// `useSearchParams()`, so this route can't be statically prerendered.
+// Auth views read live session/query state via `useAuth()`, so this route
+// can't be statically prerendered.
 export const dynamic = "force-dynamic";
-
-export function generateStaticParams() {
-    return AUTH_VIEWS.map((path) => ({ path }));
-}
 
 export default async function AuthPage({
     params,
@@ -24,13 +12,15 @@ export default async function AuthPage({
     params: Promise<{ path: string }>;
 }) {
     const { path } = await params;
-    if (!(AUTH_VIEWS as readonly string[]).includes(path)) {
+    if (!Object.values(viewPaths.auth).includes(path)) {
         notFound();
     }
 
     return (
         <main className="flex min-h-svh items-center justify-center p-4">
-            <AuthForm view={path as AuthView} />
+            <div className="w-full max-w-sm">
+                <Auth path={path} />
+            </div>
         </main>
     );
 }
