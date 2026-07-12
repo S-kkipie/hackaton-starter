@@ -3,6 +3,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { PropsWithChildren } from "react";
 import { authClient } from "@/frontend/auth/auth";
 import { AuthProvider } from "@/frontend/components/auth/auth-provider";
@@ -22,25 +23,27 @@ export function Providers({ children }: PropsWithChildren) {
             enableSystem
             disableTransitionOnChange
         >
-            <QueryClientProvider client={queryClient}>
-                <EdenProvider client={apiClient} queryClient={queryClient}>
-                    <AuthProvider
-                        authClient={authClient}
-                        redirectTo="/projects"
-                        emailAndPassword={{
-                            enabled: true,
-                            forgotPassword: true,
-                        }}
-                        navigate={({ to, replace }) =>
-                            replace ? router.replace(to) : router.push(to)
-                        }
-                        Link={Link}
-                    >
-                        {children}
-                        <Toaster />
-                    </AuthProvider>
-                </EdenProvider>
-            </QueryClientProvider>
+            <NuqsAdapter>
+                <QueryClientProvider client={queryClient}>
+                    <EdenProvider client={apiClient} queryClient={queryClient}>
+                        <AuthProvider
+                            authClient={authClient}
+                            redirectTo="/projects"
+                            emailAndPassword={{
+                                enabled: true,
+                                forgotPassword: true,
+                            }}
+                            navigate={({ to, replace }) =>
+                                replace ? router.replace(to) : router.push(to)
+                            }
+                            Link={Link}
+                        >
+                            {children}
+                            <Toaster />
+                        </AuthProvider>
+                    </EdenProvider>
+                </QueryClientProvider>
+            </NuqsAdapter>
         </ThemeProvider>
     );
 }

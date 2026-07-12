@@ -21,6 +21,8 @@
                 "**/frontend/components/ui/**",
                 "**/frontend/components/auth/**"
             ],
+            "formatter": { "enabled": false },
+            "assist": { "actions": { "source": { "organizeImports": "off" } } },
             "linter": {
                 "rules": {
                     "a11y": {
@@ -29,6 +31,7 @@
                     },
                     "complexity": { "noUselessFragments": "off" },
                     "correctness": { "useExhaustiveDependencies": "off" },
+                    "style": { "useImportType": "off" },
                     "suspicious": {
                         "noDoubleEquals": "off",
                         "noDocumentCookie": "off"
