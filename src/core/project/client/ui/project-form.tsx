@@ -10,6 +10,7 @@ import { Button } from "@/frontend/components/ui/button";
 import {
     DialogClose,
     DialogContent,
+    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
@@ -50,6 +51,11 @@ export function ProjectForm({
                     <DialogTitle>
                         {editing ? "Edit project" : "New project"}
                     </DialogTitle>
+                    <DialogDescription>
+                        {editing
+                            ? "Update your project details."
+                            : "Add a new project."}
+                    </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-2">
                     <Label htmlFor="name">Name</Label>

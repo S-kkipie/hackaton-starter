@@ -59,9 +59,4 @@ export function useDeleteProject() {
     });
 }
 
-/** Sanctioned mutation-result unwrap (Eden's mutationFn returns `unknown`). */
-export function unwrapProject(result: unknown): Project {
-    return (result as { response: Project }).response;
-}
-
 export type { CreateProject, Project, UpdateProject };

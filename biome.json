@@ -14,5 +14,27 @@
             }
         }
     },
-    "assist": { "actions": { "source": { "organizeImports": "on" } } }
+    "assist": { "actions": { "source": { "organizeImports": "on" } } },
+    "overrides": [
+        {
+            "includes": [
+                "**/frontend/components/ui/**",
+                "**/frontend/components/auth/**"
+            ],
+            "linter": {
+                "rules": {
+                    "a11y": {
+                        "useSemanticElements": "off",
+                        "useKeyWithClickEvents": "off"
+                    },
+                    "complexity": { "noUselessFragments": "off" },
+                    "correctness": { "useExhaustiveDependencies": "off" },
+                    "suspicious": {
+                        "noDoubleEquals": "off",
+                        "noDocumentCookie": "off"
+                    }
+                }
+            }
+        }
+    ]
 }

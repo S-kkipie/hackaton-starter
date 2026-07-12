@@ -10,5 +10,4 @@ const pool = new Pool({
 await migrate(drizzle(pool), { migrationsFolder: "./drizzle" });
 await pool.end();
 
-// biome-ignore lint/suspicious/noConsole: standalone migration script
 console.log("migrations applied");
