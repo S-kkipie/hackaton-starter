@@ -1,6 +1,11 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
+import type { AnyFieldApi } from "@tanstack/react-form";
+import { z } from "zod";
+import {
+    createProjectSchema,
+    projectStatusSchema,
+} from "@/core/project/domain/schemas";
 import type {
     CreateProject,
     Project,
@@ -15,9 +20,30 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/frontend/components/ui/dialog";
+import { Field, FieldError, FieldLabel } from "@/frontend/components/ui/field";
 import { Input } from "@/frontend/components/ui/input";
-import { Label } from "@/frontend/components/ui/label";
 import { Textarea } from "@/frontend/components/ui/textarea";
+import { useAppForm } from "@/frontend/hooks/use-tanstack-form";
+
+function getFieldErrors(field: AnyFieldApi) {
+    return field.state.meta.errors.map((error) => ({
+        message: String(error?.message ?? error),
+    }));
+}
+
+/**
+ * The form always carries concrete (non-optional) values for every field, so
+ * validation runs against a variant of {@link createProjectSchema} where
+ * `description`/`status` are required strings rather than optional - this
+ * keeps the TanStack Form value type and the zod input type identical.
+ * `description` still accepts `""` (no min-length constraint); an empty
+ * value is mapped back to `undefined` in `onSubmit` to satisfy
+ * {@link CreateProject}.
+ */
+const projectFormSchema = createProjectSchema.extend({
+    description: z.string().max(2000),
+    status: projectStatusSchema,
+});
 
 export function ProjectForm({
     editing,
@@ -28,25 +54,34 @@ export function ProjectForm({
     submitting: boolean;
     onSubmit: (values: CreateProject) => void;
 }) {
-    const [name, setName] = useState(editing?.name ?? "");
-    const [description, setDescription] = useState(editing?.description ?? "");
-    const [status, setStatus] = useState<ProjectStatus>(
-        editing?.status ?? "active",
-    );
-
-    function handleSubmit(e: FormEvent) {
-        e.preventDefault();
-        if (!name.trim()) return;
-        onSubmit({
-            name: name.trim(),
-            description: description.trim() || undefined,
-            status,
-        });
-    }
+    const form = useAppForm({
+        defaultValues: {
+            name: editing?.name ?? "",
+            description: editing?.description ?? "",
+            status: (editing?.status ?? "active") as ProjectStatus,
+        },
+        validators: {
+            onChange: projectFormSchema,
+        },
+        onSubmit: ({ value }) => {
+            onSubmit({
+                ...value,
+                description: value.description?.trim()
+                    ? value.description.trim()
+                    : undefined,
+            });
+        },
+    });
 
     return (
         <DialogContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    form.handleSubmit();
+                }}
+                className="space-y-4"
+            >
                 <DialogHeader>
                     <DialogTitle>
                         {editing ? "Edit project" : "New project"}
@@ -57,47 +92,114 @@ export function ProjectForm({
                             : "Add a new project."}
                     </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                        id="name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                        id="description"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        rows={3}
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <select
-                        id="status"
-                        value={status}
-                        onChange={(e) =>
-                            setStatus(e.target.value as ProjectStatus)
-                        }
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
-                    >
-                        <option value="active">active</option>
-                        <option value="archived">archived</option>
-                    </select>
-                </div>
+
+                <form.Field name="name">
+                    {(field) => {
+                        const hasError = !field.state.meta.isValid;
+                        return (
+                            <Field data-invalid={hasError}>
+                                <FieldLabel htmlFor={field.name}>
+                                    Name
+                                </FieldLabel>
+                                <Input
+                                    id={field.name}
+                                    name={field.name}
+                                    value={field.state.value}
+                                    onBlur={field.handleBlur}
+                                    onChange={(e) =>
+                                        field.handleChange(e.target.value)
+                                    }
+                                    aria-invalid={hasError}
+                                />
+                                {hasError && (
+                                    <FieldError
+                                        errors={getFieldErrors(field)}
+                                    />
+                                )}
+                            </Field>
+                        );
+                    }}
+                </form.Field>
+
+                <form.Field name="description">
+                    {(field) => {
+                        const hasError = !field.state.meta.isValid;
+                        return (
+                            <Field data-invalid={hasError}>
+                                <FieldLabel htmlFor={field.name}>
+                                    Description
+                                </FieldLabel>
+                                <Textarea
+                                    id={field.name}
+                                    name={field.name}
+                                    value={field.state.value ?? ""}
+                                    onBlur={field.handleBlur}
+                                    onChange={(e) =>
+                                        field.handleChange(e.target.value)
+                                    }
+                                    rows={3}
+                                    aria-invalid={hasError}
+                                />
+                                {hasError && (
+                                    <FieldError
+                                        errors={getFieldErrors(field)}
+                                    />
+                                )}
+                            </Field>
+                        );
+                    }}
+                </form.Field>
+
+                <form.Field name="status">
+                    {(field) => {
+                        const hasError = !field.state.meta.isValid;
+                        return (
+                            <Field data-invalid={hasError}>
+                                <FieldLabel htmlFor={field.name}>
+                                    Status
+                                </FieldLabel>
+                                <select
+                                    id={field.name}
+                                    name={field.name}
+                                    value={field.state.value}
+                                    onBlur={field.handleBlur}
+                                    onChange={(e) =>
+                                        field.handleChange(
+                                            e.target.value as ProjectStatus,
+                                        )
+                                    }
+                                    aria-invalid={hasError}
+                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
+                                >
+                                    <option value="active">active</option>
+                                    <option value="archived">archived</option>
+                                </select>
+                                {hasError && (
+                                    <FieldError
+                                        errors={getFieldErrors(field)}
+                                    />
+                                )}
+                            </Field>
+                        );
+                    }}
+                </form.Field>
+
                 <DialogFooter>
                     <DialogClose asChild>
                         <Button type="button" variant="outline">
                             Cancel
                         </Button>
                     </DialogClose>
-                    <Button type="submit" disabled={submitting}>
-                        {editing ? "Save" : "Create"}
-                    </Button>
+                    <form.Subscribe selector={(state) => state.canSubmit}>
+                        {(canSubmit) => (
+                            <Button
+                                type="submit"
+                                disabled={submitting || !canSubmit}
+                            >
+                                {editing ? "Save" : "Create"}
+                            </Button>
+                        )}
+                    </form.Subscribe>
                 </DialogFooter>
             </form>
         </DialogContent>

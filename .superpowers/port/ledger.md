@@ -10,7 +10,7 @@ Scope: FULL data-table folder verbatim + RSC-driven projects table + TanStack Fo
 - [x] T3 port frontend/components/data-table/* + ui/field + ui/sortable
 - [x] T4 backend: paginated GET /projects (domain schema + repo findProjectsPage + service + route + tests)
 - [x] T5 project table UI: search-params + columns + use-projects-table + RSC page + screen
-- [ ] T6 TanStack Form project-form
+- [x] T6 TanStack Form project-form
 - [ ] T7 docs + final verify + review + merge/push
 T1: commit 9b369d3 (deps/primitives/sortable/compose-refs/constants/NuqsAdapter, build green)
 T2: 13 files copied; trimmed DataTableRowAction.variant to update|delete; dropped
@@ -51,3 +51,18 @@ T5: added domain/search-params.ts (nuqs parsers + loadProjectSearchParams),
     longer goes through the Eden/Elysia HTTP query parsing for the list read.
     No toolkit mismatches. tsc/vitest(36, unchanged)/biome/build all green.
     See .superpowers/port/t5-report.md for full detail.
+T5 review: skipped per user (covered in final whole-branch review).
+T6: rewrote project-form.tsx with useAppForm (onChange validator, form.Field
+    render-prop bindings, form.Subscribe(canSubmit) gating submit alongside
+    the `submitting` prop). Type-fix beyond the task's literal pseudocode:
+    defaultValues carries concrete (non-optional) description/status, which
+    doesn't structurally match createProjectSchema's `.optional()` fields for
+    TanStack Form's onChange validator typing — added a local
+    `projectFormSchema` (createProjectSchema.extend({description, status}))
+    with both fields required-but-still-permissive (no min-length on
+    description, so "" still passes) to match the form's value type; onSubmit
+    maps "" description back to `undefined` before calling the parent
+    onSubmit, satisfying CreateProject. No screen prop-contract change needed
+    (project-screen.tsx already passed editing/submitting/onSubmit exactly).
+    tsc/vitest(36, unchanged)/biome/build all green. See
+    .superpowers/port/t6-report.md for full detail.
