@@ -14,13 +14,13 @@ export const projectSchema = z.object({
 });
 
 export const createProjectSchema = z.object({
-    name: z.string().min(1).max(200),
+    name: z.string().trim().min(1).max(200),
     description: z.string().max(2000).optional(),
     status: projectStatusSchema.optional(),
 });
 
 export const updateProjectSchema = z.object({
-    name: z.string().min(1).max(200).optional(),
+    name: z.string().trim().min(1).max(200).optional(),
     description: z.string().max(2000).nullable().optional(),
     status: projectStatusSchema.optional(),
 });

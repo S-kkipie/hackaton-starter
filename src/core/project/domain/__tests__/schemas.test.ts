@@ -15,6 +15,18 @@ describe("createProjectSchema", () => {
         expect(createProjectSchema.safeParse({ name: "" }).success).toBe(false);
     });
 
+    it("rejects a whitespace-only name", () => {
+        expect(createProjectSchema.safeParse({ name: "   " }).success).toBe(
+            false,
+        );
+    });
+
+    it("trims a padded name", () => {
+        expect(createProjectSchema.parse({ name: "  Launch  " }).name).toBe(
+            "Launch",
+        );
+    });
+
     it("rejects an unknown status", () => {
         expect(
             createProjectSchema.safeParse({ name: "x", status: "nope" })

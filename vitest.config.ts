@@ -13,6 +13,7 @@ export default defineConfig({
     test: {
         environment: "node",
         globals: true,
+        include: ["src/**/__tests__/**/*.test.ts"],
         env: {
             DATABASE_URL: "postgres://user:pass@localhost:5432/app",
             BETTER_AUTH_SECRET: "test-secret-least-thirty-two-chars-long",
