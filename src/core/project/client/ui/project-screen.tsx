@@ -3,26 +3,15 @@
 import { PlusIcon } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import { useState } from "react";
-import { toast } from "sonner";
-import type {
-    PaginatedProjects,
-    ProjectStatus,
-} from "@/core/project/domain/types";
+import type { PaginatedProjects } from "@/core/project/domain/types";
 import { DataTable } from "@/frontend/components/data-table/data-table";
 import { DataTableToolbar } from "@/frontend/components/data-table/data-table-toolbar";
 import { Button } from "@/frontend/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/frontend/components/ui/dialog";
 import { Input } from "@/frontend/components/ui/input";
 import { useDebouncedCallback } from "@/frontend/hooks/use-debounced-callback";
-import { useProjects } from "../hooks";
-import { ProjectForm } from "./project-form";
+import { CreateProjectModal } from "./modals/create-project-modal";
+import { DeleteProjectModal } from "./modals/delete-project-modal";
+import { UpdateProjectModal } from "./modals/update-project-modal";
 import { useProjectsTable } from "./table/use-projects-table";
 
 export function ProjectScreen({
@@ -32,7 +21,6 @@ export function ProjectScreen({
 }) {
     const { table, rowAction, setRowAction } =
         useProjectsTable(initialProjects);
-    const { useCreate, useUpdate, useDelete } = useProjects();
 
     const [createOpen, setCreateOpen] = useState(false);
     const [q, setQ] = useQueryState(
@@ -48,63 +36,15 @@ export function ProjectScreen({
         rowAction?.variant === "update" ? rowAction.row.original : null;
     const deletingProject =
         rowAction?.variant === "delete" ? rowAction.row.original : null;
-    const formOpen = createOpen || editingProject !== null;
-
-    const createProject = useCreate();
-    const updateProject = useUpdate(editingProject?.id ?? "");
-    const deleteProject = useDelete();
 
     const debouncedSearch = useDebouncedCallback((value: string) => {
         table.setPageIndex(0);
         void setQ(value.length > 0 ? value : null);
     }, 300);
 
-    function closeForm() {
-        setCreateOpen(false);
-        setRowAction(null);
-    }
-
     function handleSearchChange(value: string) {
         setSearchValue(value);
         debouncedSearch(value);
-    }
-
-    function handleSubmit(values: {
-        name: string;
-        description?: string | null;
-        status: ProjectStatus;
-    }) {
-        if (editingProject) {
-            updateProject.mutate(values, {
-                onSuccess: () => {
-                    toast.success("Project updated");
-                    closeForm();
-                },
-                onError: () => toast.error("Update failed"),
-            });
-            return;
-        }
-        createProject.mutate(
-            { ...values, description: values.description ?? undefined },
-            {
-                onSuccess: () => {
-                    toast.success("Project created");
-                    closeForm();
-                },
-                onError: () => toast.error("Create failed"),
-            },
-        );
-    }
-
-    function handleDelete() {
-        if (!deletingProject) return;
-        deleteProject.mutate(deletingProject.id, {
-            onSuccess: () => {
-                toast.success("Project deleted");
-                setRowAction(null);
-            },
-            onError: () => toast.error("Delete failed"),
-        });
     }
 
     return (
@@ -137,56 +77,18 @@ export function ProjectScreen({
                 <DataTableToolbar table={table} />
             </DataTable>
 
-            <Dialog
-                open={formOpen}
-                onOpenChange={(open) => {
-                    if (!open) closeForm();
-                }}
-            >
-                <ProjectForm
-                    key={editingProject?.id ?? "new"}
-                    editing={editingProject}
-                    submitting={
-                        createProject.isPending || updateProject.isPending
-                    }
-                    onSubmit={handleSubmit}
-                />
-            </Dialog>
-
-            <Dialog
-                open={deletingProject !== null}
-                onOpenChange={(open) => {
-                    if (!open) setRowAction(null);
-                }}
-            >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Delete project</DialogTitle>
-                        <DialogDescription>
-                            {deletingProject
-                                ? `This will permanently delete "${deletingProject.name}". This action cannot be undone.`
-                                : ""}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setRowAction(null)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            disabled={deleteProject.isPending}
-                            onClick={handleDelete}
-                        >
-                            Delete
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <CreateProjectModal
+                open={createOpen}
+                onOpenChange={setCreateOpen}
+            />
+            <UpdateProjectModal
+                project={editingProject}
+                onClose={() => setRowAction(null)}
+            />
+            <DeleteProjectModal
+                project={deletingProject}
+                onClose={() => setRowAction(null)}
+            />
         </div>
     );
 }

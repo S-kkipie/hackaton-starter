@@ -84,8 +84,29 @@ The zod domain schema is the validation source of truth (reuse
 `field.state.meta.errors` via a small `getFieldErrors` mapper into
 `FieldError errors={...}`.
 
-**Check:** a new form uses `useAppForm` + a zod validator + `Field`/`FieldError`,
-not a raw `useState`-controlled form; validation reuses the domain schema.
+**File layout** (per `core/project/client`, following myworkin `cv-analysis`):
+
+```
+core/<domain>/client/
+  validation.ts                 form zod schema + `…FormValues` (z.infer)
+  ui/forms/<domain>-form.tsx     form definition + form API: default values,
+                                 `_…Form()` (for the ReturnType api type),
+                                 `getFieldErrors`, the `…FormUI`, and the exported
+                                 `…Form` component (useAppForm + fields)
+  ui/modals/                     dialogs live here
+    create-<domain>-modal.tsx    <Dialog> + <…Form> + useCreate
+    update-<domain>-modal.tsx    <Dialog> + keyed <…Form defaultValues> + useUpdate
+    delete-<domain>-modal.tsx    <Dialog> confirm + useDelete
+  ui/<domain>-screen.tsx         table + toolbar + the three modals (controlled by rowAction)
+```
+
+The form emits raw `…FormValues`; each modal maps the empty-description case to
+`undefined` (create) / `null` (edit) for its mutation. The screen never inlines a
+`<Dialog>` — it renders the modals.
+
+**Check:** a new form uses `useAppForm` + a zod validator (in `validation.ts`) +
+`Field`/`FieldError`, not a raw `useState`-controlled form; validation reuses the
+domain schema; dialogs live in `ui/modals/`, form definition in `ui/forms/`.
 
 **Dialog/modal forms must remount per record.** `useAppForm`'s `defaultValues`
 only seed state once, on mount — they do NOT re-sync if the record being
