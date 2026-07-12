@@ -16,7 +16,7 @@ export function ProjectScreen() {
     const [editing, setEditing] = useState<Project | null>(null);
 
     const listQuery = useList();
-    const projects = listQuery.data?.response ?? [];
+    const projects = listQuery.data?.response.items ?? [];
     const createProject = useCreate();
     const updateProject = useUpdate(editing?.id ?? "");
     const deleteProject = useDelete();

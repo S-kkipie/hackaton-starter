@@ -8,7 +8,7 @@ Scope: FULL data-table folder verbatim + RSC-driven projects table + TanStack Fo
 - [x] T1 deps + shadcn primitives + sortable + constants + NuqsAdapter
 - [x] T2 port frontend lib/hooks/types (data-table, parsers, config, format, result, use-data-table, use-tanstack-form, use-debounced-callback, use-callback-ref, use-mobile, use-mutate-search, use-mutation-refresh)
 - [x] T3 port frontend/components/data-table/* + ui/field + ui/sortable
-- [ ] T4 backend: paginated GET /projects (domain schema + repo findProjectsPage + service + route + tests)
+- [x] T4 backend: paginated GET /projects (domain schema + repo findProjectsPage + service + route + tests)
 - [ ] T5 project table UI: search-params + columns + use-projects-table + RSC page + screen
 - [ ] T6 TanStack Form project-form
 - [ ] T7 docs + final verify + review + merge/push
@@ -25,3 +25,15 @@ T3: 18 files copied verbatim (17 components + __tests__ test); no trims needed
     needs it) + nanoid dep (was only transitive, not resolvable). Extended
     biome.json vendored override to data-table/**. tsc/vitest(25)/biome/build
     all green. See .superpowers/port/t3-report.md for full detail.
+T3: commit b4d5378 (data-table folder 18 files; +lib/id.ts+nanoid; biome override +data-table/**; 25 tests; green)
+T4: added domain search/paginated schemas + repo findProjectsPage (drizzle
+    and/inArray/ilike/or where, multi-col orderBy, count()) + service
+    searchProjectsService + rewrote GET /projects route. Deleted
+    list-projects-service.ts + find-projects-by-user.ts (dead). Fixed a real
+    bug in the spec's literal sort-preprocess snippet: raw JSON.parse in
+    z.preprocess throws past .catch() on malformed JSON (verified against
+    zod ^4.4.3) — wrapped in try/catch so malformed sort degrades to [] as
+    intended instead of throwing. One-line compat fix in project-screen.tsx
+    (.response -> .response.items) to keep tsc/build green until T5 replaces
+    that screen. tsc/vitest(26)/biome/build all green. See
+    .superpowers/port/t4-report.md for full detail.

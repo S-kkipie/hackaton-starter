@@ -5,20 +5,21 @@ vi.mock("../../repository/find-project-by-id", () => ({
 }));
 vi.mock("../../repository/create-project", () => ({ createProject: vi.fn() }));
 vi.mock("../../repository/delete-project", () => ({ deleteProject: vi.fn() }));
-vi.mock("../../repository/find-projects-by-user", () => ({
-    findProjectsByUser: vi.fn(),
+vi.mock("../../repository/find-projects-page", () => ({
+    findProjectsPage: vi.fn(),
 }));
 vi.mock("../../repository/update-project", () => ({ updateProject: vi.fn() }));
 
+import type { ProjectSearch } from "@/core/project/domain/types";
 import { createProject } from "../../repository/create-project";
 import { deleteProject } from "../../repository/delete-project";
 import { findProjectById } from "../../repository/find-project-by-id";
-import { findProjectsByUser } from "../../repository/find-projects-by-user";
+import { findProjectsPage } from "../../repository/find-projects-page";
 import { updateProject } from "../../repository/update-project";
 import { createProjectService } from "../create-project-service";
 import { deleteProjectService } from "../delete-project-service";
 import { getProjectService } from "../get-project-service";
-import { listProjectsService } from "../list-projects-service";
+import { searchProjectsService } from "../search-projects-service";
 import { updateProjectService } from "../update-project-service";
 
 const row = {
@@ -81,24 +82,50 @@ describe("deleteProjectService", () => {
     });
 });
 
-describe("listProjectsService", () => {
+const searchParams: ProjectSearch = {
+    page: 1,
+    perPage: 2,
+    sort: [],
+    status: [],
+    q: "",
+};
+
+describe("searchProjectsService", () => {
     beforeEach(() => vi.clearAllMocks());
 
-    it("returns a mapped list of projects", async () => {
-        vi.mocked(findProjectsByUser).mockResolvedValue([row]);
-        const r = await listProjectsService("u1");
+    it("maps rows to items and computes pageCount from total/perPage", async () => {
+        vi.mocked(findProjectsPage).mockResolvedValue({
+            rows: [row],
+            total: 5,
+        });
+        const r = await searchProjectsService("u1", searchParams);
         expect(r.ok).toBe(true);
         if (r.ok) {
-            expect(r.data).toHaveLength(1);
-            expect(r.data[0].createdAt).toBe("2026-01-01T00:00:00.000Z");
+            expect(r.data.items).toHaveLength(1);
+            expect(r.data.items[0].createdAt).toBe("2026-01-01T00:00:00.000Z");
+            expect(r.data.total).toBe(5);
+            expect(r.data.page).toBe(1);
+            expect(r.data.perPage).toBe(2);
+            expect(r.data.pageCount).toBe(3);
         }
     });
 
-    it("returns an empty array when no projects exist", async () => {
-        vi.mocked(findProjectsByUser).mockResolvedValue([]);
-        const r = await listProjectsService("u1");
+    it("returns an empty page when there are no matches", async () => {
+        vi.mocked(findProjectsPage).mockResolvedValue({ rows: [], total: 0 });
+        const r = await searchProjectsService("u1", searchParams);
         expect(r.ok).toBe(true);
-        if (r.ok) expect(r.data).toHaveLength(0);
+        if (r.ok) {
+            expect(r.data.items).toHaveLength(0);
+            expect(r.data.total).toBe(0);
+            expect(r.data.pageCount).toBe(0);
+        }
+    });
+
+    it("returns an INTERNAL_SERVER_ERROR when the repository throws", async () => {
+        vi.mocked(findProjectsPage).mockRejectedValue(new Error("db down"));
+        const r = await searchProjectsService("u1", searchParams);
+        expect(r.ok).toBe(false);
+        if (!r.ok) expect(r.error.code).toBe("INTERNAL_SERVER_ERROR");
     });
 });
 

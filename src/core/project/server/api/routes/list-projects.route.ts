@@ -1,6 +1,8 @@
 import { Elysia } from "elysia";
-import { z } from "zod";
-import { projectSchema } from "@/core/project/domain/schemas";
+import {
+    paginatedProjectsSchema,
+    projectSearchSchema,
+} from "@/core/project/domain/schemas";
 import { authed } from "@/server/auth/middleware/authed";
 import {
     CommonResponse,
@@ -8,12 +10,12 @@ import {
     errorToResponse,
     successResponseSchema,
 } from "@/server/common/responses";
-import { listProjectsService } from "../../services/list-projects-service";
+import { searchProjectsService } from "../../services/search-projects-service";
 
 export const listProjectsRoute = new Elysia().use(authed).get(
     "/",
-    async ({ user, status }) => {
-        const result = await listProjectsService(user.id);
+    async ({ user, query, status }) => {
+        const result = await searchProjectsService(user.id, query);
         if (!result.ok)
             return status(
                 result.error.status as 500,
@@ -26,13 +28,19 @@ export const listProjectsRoute = new Elysia().use(authed).get(
     },
     {
         authed: true,
+        query: projectSearchSchema,
         response: {
-            200: successResponseSchema(z.array(projectSchema), "ProjectList"),
+            200: successResponseSchema(
+                paginatedProjectsSchema,
+                "PaginatedProjects",
+            ),
             500: errorResponseSchema(500),
         },
         detail: {
             tags: ["Projects"],
-            summary: "List the current user's projects",
+            summary: "Search the current user's projects",
+            description:
+                "Returns one filtered, paginated, sortable page of the current user's projects.",
         },
     },
 );
