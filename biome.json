@@ -19,7 +19,8 @@
         {
             "includes": [
                 "**/frontend/components/ui/**",
-                "**/frontend/components/auth/**"
+                "**/frontend/components/auth/**",
+                "**/frontend/components/data-table/**"
             ],
             "formatter": { "enabled": false },
             "assist": { "actions": { "source": { "organizeImports": "off" } } },
