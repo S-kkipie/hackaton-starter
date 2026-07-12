@@ -152,3 +152,54 @@ get/create/update/delete service describe blocks left untouched.
   keys sent as a single value). Not exercised end-to-end against a live
   Elysia query-string parse in this task — worth a smoke check in T5/T7 when
   the real UI sends `?status=active&status=archived`-style params.
+
+## T4 fix — normalize single-value `status` query param
+
+The blocker flagged above was real: against Elysia+zod, `GET /projects?status=active`
+(a single value) arrives as the bare string `"active"`, which failed
+`z.array(projectStatusSchema)` with a 422 before ever reaching the service —
+breaking the common "filter by one status" case. Only the repeated-key form
+(`?status=active&status=archived`) parsed correctly.
+
+Fixed in `src/core/project/domain/schemas.ts` by wrapping `status` in the same
+preprocess pattern already used by `sort`: a bare value becomes a 1-element
+array, `undefined`/`null` → `[]`, arrays pass through unchanged, and an
+invalid status degrades to `[]` via `.catch([])` instead of throwing a 422.
+
+```ts
+status: z
+    .preprocess(
+        (v) => (v == null ? [] : Array.isArray(v) ? v : [v]),
+        z.array(projectStatusSchema),
+    )
+    .catch([]),
+```
+
+Added a `describe("projectSearchSchema", ...)` block to
+`src/core/project/domain/__tests__/schemas.test.ts` covering the previously
+untested preprocessing: single-value/array/missing/invalid `status`,
+JSON-string/array/malformed/unknown-column `sort`, `page`/`perPage`
+coercion+defaults, and `q` trimming. 18 tests total in that file (10 new).
+
+### Verify
+
+`pnpm exec vitest run src/core/project/domain src/core/project/server/services`
+
+```
+ RUN  v3.2.7 /home/skkippie/work/hackaton-starter
+
+ ✓ src/core/project/domain/__tests__/schemas.test.ts (18 tests) 15ms
+ ✓ src/core/project/server/services/__tests__/project-services.test.ts (10 tests) 6ms
+
+ Test Files  2 passed (2)
+      Tests  28 passed (28)
+   Start at  17:31:26
+   Duration  569ms (transform 164ms, setup 0ms, collect 342ms, tests 21ms, environment 0ms, prepare 198ms)
+```
+
+Full suite (`pnpm exec vitest run`): **36 passed** (5 files), up from 26
+pre-fix (net +10, all new `projectSearchSchema` tests).
+
+`pnpm exec tsc --noEmit` → PASS, no errors.
+`pnpm exec biome check .` → clean: `Checked 146 files in 79ms. No fixes applied.`
+(no formatting fixes were needed on either changed file this time).

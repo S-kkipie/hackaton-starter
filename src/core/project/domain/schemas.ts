@@ -63,7 +63,12 @@ export const projectSearchSchema = z.object({
     sort: z
         .preprocess(parseSortParam, z.array(projectSortItemSchema))
         .catch([]),
-    status: z.array(projectStatusSchema).default([]),
+    status: z
+        .preprocess(
+            (v) => (v == null ? [] : Array.isArray(v) ? v : [v]),
+            z.array(projectStatusSchema),
+        )
+        .catch([]),
     q: z.string().trim().default(""),
 });
 
