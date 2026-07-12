@@ -1,42 +1,80 @@
 "use client";
 
+import { PlusIcon } from "lucide-react";
+import { parseAsString, useQueryState } from "nuqs";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { CreateProject, Project } from "@/core/project/domain/types";
+import type {
+    CreateProject,
+    PaginatedProjects,
+} from "@/core/project/domain/types";
+import { DataTable } from "@/frontend/components/data-table/data-table";
+import { DataTableToolbar } from "@/frontend/components/data-table/data-table-toolbar";
 import { Button } from "@/frontend/components/ui/button";
-import { Dialog, DialogTrigger } from "@/frontend/components/ui/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/frontend/components/ui/dialog";
+import { Input } from "@/frontend/components/ui/input";
+import { useDebouncedCallback } from "@/frontend/hooks/use-debounced-callback";
 import { useProjects } from "../hooks";
-import { ProjectCard } from "./project-card";
 import { ProjectForm } from "./project-form";
+import { useProjectsTable } from "./table/use-projects-table";
 
-export function ProjectScreen() {
-    const { useList, useCreate, useUpdate, useDelete } = useProjects();
+export function ProjectScreen({
+    initialProjects,
+}: {
+    initialProjects: PaginatedProjects;
+}) {
+    const { table, rowAction, setRowAction } =
+        useProjectsTable(initialProjects);
+    const { useCreate, useUpdate, useDelete } = useProjects();
 
-    const [open, setOpen] = useState(false);
-    const [editing, setEditing] = useState<Project | null>(null);
+    const [createOpen, setCreateOpen] = useState(false);
+    const [q, setQ] = useQueryState(
+        "q",
+        parseAsString.withDefault("").withOptions({
+            shallow: false,
+            clearOnDefault: true,
+        }),
+    );
+    const [searchValue, setSearchValue] = useState(q);
 
-    const listQuery = useList();
-    const projects = listQuery.data?.response.items ?? [];
+    const editingProject =
+        rowAction?.variant === "update" ? rowAction.row.original : null;
+    const deletingProject =
+        rowAction?.variant === "delete" ? rowAction.row.original : null;
+    const formOpen = createOpen || editingProject !== null;
+
     const createProject = useCreate();
-    const updateProject = useUpdate(editing?.id ?? "");
+    const updateProject = useUpdate(editingProject?.id ?? "");
     const deleteProject = useDelete();
 
-    function openCreate() {
-        setEditing(null);
-        setOpen(true);
+    const debouncedSearch = useDebouncedCallback((value: string) => {
+        table.setPageIndex(0);
+        void setQ(value.length > 0 ? value : null);
+    }, 300);
+
+    function closeForm() {
+        setCreateOpen(false);
+        setRowAction(null);
     }
 
-    function openEdit(project: Project) {
-        setEditing(project);
-        setOpen(true);
+    function handleSearchChange(value: string) {
+        setSearchValue(value);
+        debouncedSearch(value);
     }
 
     function handleSubmit(values: CreateProject) {
-        if (editing) {
+        if (editingProject) {
             updateProject.mutate(values, {
                 onSuccess: () => {
                     toast.success("Project updated");
-                    setOpen(false);
+                    closeForm();
                 },
                 onError: () => toast.error("Update failed"),
             });
@@ -45,56 +83,102 @@ export function ProjectScreen() {
         createProject.mutate(values, {
             onSuccess: () => {
                 toast.success("Project created");
-                setOpen(false);
+                closeForm();
             },
             onError: () => toast.error("Create failed"),
         });
     }
 
-    function handleDelete(id: string) {
-        deleteProject.mutate(id, {
-            onSuccess: () => toast.success("Project deleted"),
+    function handleDelete() {
+        if (!deletingProject) return;
+        deleteProject.mutate(deletingProject.id, {
+            onSuccess: () => {
+                toast.success("Project deleted");
+                setRowAction(null);
+            },
             onError: () => toast.error("Delete failed"),
         });
     }
 
     return (
-        <div className="mx-auto w-full max-w-3xl space-y-6 p-6">
-            <div className="flex items-center justify-between">
+        <div className="mx-auto w-full max-w-5xl space-y-6 p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
                 <h1 className="font-semibold text-2xl">Projects</h1>
-                <Dialog open={open} onOpenChange={setOpen}>
-                    <DialogTrigger asChild>
-                        <Button onClick={openCreate}>New project</Button>
-                    </DialogTrigger>
-                    <ProjectForm
-                        editing={editing}
-                        submitting={
-                            createProject.isPending || updateProject.isPending
+                <div className="flex items-center gap-2">
+                    <Input
+                        value={searchValue}
+                        onChange={(event) =>
+                            handleSearchChange(event.target.value)
                         }
-                        onSubmit={handleSubmit}
+                        placeholder="Search projects…"
+                        className="w-56"
+                        aria-label="Search projects"
                     />
-                </Dialog>
+                    <Button
+                        onClick={() => {
+                            setRowAction(null);
+                            setCreateOpen(true);
+                        }}
+                    >
+                        <PlusIcon />
+                        New project
+                    </Button>
+                </div>
             </div>
 
-            {listQuery.isLoading ? (
-                <p className="text-muted-foreground text-sm">Loading…</p>
-            ) : projects.length === 0 ? (
-                <p className="text-muted-foreground text-sm">
-                    No projects yet. Create your first one.
-                </p>
-            ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
-                    {projects.map((project) => (
-                        <ProjectCard
-                            key={project.id}
-                            project={project}
-                            onEdit={openEdit}
-                            onDelete={handleDelete}
-                            deleting={deleteProject.isPending}
-                        />
-                    ))}
-                </div>
-            )}
+            <DataTable table={table}>
+                <DataTableToolbar table={table} />
+            </DataTable>
+
+            <Dialog
+                open={formOpen}
+                onOpenChange={(open) => {
+                    if (!open) closeForm();
+                }}
+            >
+                <ProjectForm
+                    editing={editingProject}
+                    submitting={
+                        createProject.isPending || updateProject.isPending
+                    }
+                    onSubmit={handleSubmit}
+                />
+            </Dialog>
+
+            <Dialog
+                open={deletingProject !== null}
+                onOpenChange={(open) => {
+                    if (!open) setRowAction(null);
+                }}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete project</DialogTitle>
+                        <DialogDescription>
+                            {deletingProject
+                                ? `This will permanently delete "${deletingProject.name}". This action cannot be undone.`
+                                : ""}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setRowAction(null)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            disabled={deleteProject.isPending}
+                            onClick={handleDelete}
+                        >
+                            Delete
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

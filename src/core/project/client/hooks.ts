@@ -1,42 +1,33 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { useElysia } from "@/frontend/lib/eden";
 
 /**
- * Client hooks for the projects domain. Calls go through the Eden options proxy
- * (`useElysia()`) and return the response envelope (`{ response, code, status }`);
- * read records from `data.response`. `useGetById` stays disabled until a truthy
- * id; `useUpdate` closes over the target id at call-site, while `useDelete` takes
- * the id as a mutation variable so one hook instance can drive any of N cards.
+ * Client mutation hooks for the projects domain. The list is RSC-driven (see
+ * `/projects/page.tsx` + `ProjectScreen`/`useProjectsTable`) so there is no
+ * client list query left to invalidate — each mutation's `onSuccess` calls
+ * `router.refresh()` instead, which re-runs the server component against the
+ * current URL search params (page/sort/filters/search) and streams the next
+ * page in.
  */
 export const useProjects = () => {
     const client = useElysia().projects;
-    const queryClient = useQueryClient();
-    const LIST_KEY = client.get.queryKey();
-
-    const useList = () => useQuery(client.get.queryOptions());
-
-    const useGetById = (id: string | undefined) =>
-        useQuery({
-            ...client({ id: id ?? "" }).get.queryOptions(),
-            enabled: !!id,
-        });
+    const router = useRouter();
 
     const useCreate = () =>
         useMutation(
             client.post.mutationOptions({
-                onSuccess: () =>
-                    queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+                onSuccess: () => router.refresh(),
             }),
         );
 
     const useUpdate = (id: string) =>
         useMutation(
             client({ id }).put.mutationOptions({
-                onSuccess: () =>
-                    queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+                onSuccess: () => router.refresh(),
             }),
         );
 
@@ -44,9 +35,8 @@ export const useProjects = () => {
         useMutation({
             mutationFn: (id: string) =>
                 client({ id }).delete.mutationOptions().mutationFn(undefined),
-            onSuccess: () =>
-                queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+            onSuccess: () => router.refresh(),
         });
 
-    return { useList, useGetById, useCreate, useUpdate, useDelete };
+    return { useCreate, useUpdate, useDelete };
 };

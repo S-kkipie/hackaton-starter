@@ -9,7 +9,7 @@ Scope: FULL data-table folder verbatim + RSC-driven projects table + TanStack Fo
 - [x] T2 port frontend lib/hooks/types (data-table, parsers, config, format, result, use-data-table, use-tanstack-form, use-debounced-callback, use-callback-ref, use-mobile, use-mutate-search, use-mutation-refresh)
 - [x] T3 port frontend/components/data-table/* + ui/field + ui/sortable
 - [x] T4 backend: paginated GET /projects (domain schema + repo findProjectsPage + service + route + tests)
-- [ ] T5 project table UI: search-params + columns + use-projects-table + RSC page + screen
+- [x] T5 project table UI: search-params + columns + use-projects-table + RSC page + screen
 - [ ] T6 TanStack Form project-form
 - [ ] T7 docs + final verify + review + merge/push
 T1: commit 9b369d3 (deps/primitives/sortable/compose-refs/constants/NuqsAdapter, build green)
@@ -37,3 +37,17 @@ T4: added domain search/paginated schemas + repo findProjectsPage (drizzle
     (.response -> .response.items) to keep tsc/build green until T5 replaces
     that screen. tsc/vitest(26)/biome/build all green. See
     .superpowers/port/t4-report.md for full detail.
+T4: commit 1625b71 (paginated GET /projects; find-projects-page+search-projects-service; removed list-service+find-by-user; sort preprocess try/catch fix; 26 tests). Concern: status z.array vs enumArrayParam - smoke-check Elysia repeated ?status= in T5.
+T4 FIX: commit 4daca69 (status preprocess single-value fix + 10 schema tests; 36 tests total; Critical closed).
+T5: added domain/search-params.ts (nuqs parsers + loadProjectSearchParams),
+    client/ui/table/{project-columns,use-projects-table}.ts(x), rewrote
+    hooks.ts (useCreate/useUpdate/useDelete -> router.refresh(), dropped dead
+    useList/useGetById), rewrote project-screen.tsx (RSC-fed table + debounced
+    q search + create/edit + delete-confirm dialogs), rewrote
+    app/(app)/projects/page.tsx as RSC (requireAuth + loadProjectSearchParams
+    + projectSearchSchema.parse + resolveResult(searchProjectsService)).
+    Deleted dead project-card.tsx (superseded by table rows). Resolves T4's
+    repeated-?status= concern implicitly: RSC calls the service directly, no
+    longer goes through the Eden/Elysia HTTP query parsing for the list read.
+    No toolkit mismatches. tsc/vitest(36, unchanged)/biome/build all green.
+    See .superpowers/port/t5-report.md for full detail.
