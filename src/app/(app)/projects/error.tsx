@@ -3,9 +3,10 @@
 import { Button } from "@/frontend/components/ui/button";
 
 /**
- * Route error boundary for /projects. The RSC page unwraps
- * `searchProjectsService` with `resolveResult`, which throws on failure (e.g. a
- * DB outage) — this catches it and offers a retry instead of white-screening.
+ * Route error boundary for /projects. The table `server.tsx` handles a failed
+ * service result inline; this boundary is the backstop for any other error
+ * thrown while rendering the route (auth, param parsing) — it offers a retry
+ * instead of white-screening.
  */
 export default function ProjectsError({
     reset,

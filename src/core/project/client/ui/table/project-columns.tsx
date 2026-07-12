@@ -37,7 +37,7 @@ interface GetProjectColumnsProps {
  * multi-select filter; `name`/`createdAt` are sortable through
  * `DataTableColumnHeader`, matching the `sort` URL contract in
  * `search-params.ts`. The `actions` column funnels Edit/Delete into
- * `setRowAction`, read back by `ProjectScreen` to drive the edit/delete
+ * `setRowAction`, read back by `ProjectsDataTable` to drive the edit/delete
  * dialogs.
  */
 export function getProjectColumns({

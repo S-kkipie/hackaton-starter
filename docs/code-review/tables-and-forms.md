@@ -18,19 +18,23 @@ Canonical wiring (see `core/project`):
 
 ```
 core/<domain>/
-  domain/search-params.ts          nuqs parsers — keys MUST match what useDataTable writes
+  domain/search-params.ts          nuqs parsers + createSearchParamsCache (keys MUST match what useDataTable writes)
   client/ui/table/
     <domain>-columns.tsx           ColumnDef[]: DataTableColumnHeader, cells, meta{label,variant,options} for filters, an actions column dispatching setRowAction
-    use-<domain>-table.ts          useDataTable({ data, columns, pageCount, getRowId, shallow:false })
-  client/ui/<domain>-screen.tsx    <DataTable table={table}><DataTableToolbar table={table}/></DataTable>
+    data-table.tsx                  "use client" — wires useDataTable to the generic data-table components + modals; receives the awaited service page as `initial…` (no client fetch)
+    server.tsx                      RSC (the SSR source) — reads the params cache, calls search*Service, renders <…DataTable initial…/>
+app/(app)/<domain>/page.tsx        RSC — searchParamsCache.parse(searchParams), then renders <…TableServer userId/>
 ```
 
-Data source is **RSC**: the `(app)/<domain>/page.tsx` server component resolves
-the page via a `search*Service` (returning `AsyncAppResult<Paginated…>`),
-unwraps with `resolveResult`/`unwrapResult` (`@/frontend/lib/result`), and passes
-`initial…` to the client screen. `shallow:false` makes URL changes re-run the
-RSC. Mutations `router.refresh()` the RSC (there is no client list query to
-invalidate). A `page`-sibling `error.tsx` catches the `resolveResult` throw.
+Data source is **RSC**, split into three files: `page.tsx` parses the URL into the
+request-scoped `createSearchParamsCache` and renders `server.tsx`; `server.tsx`
+reads the cache (`.all()`), runs it through the domain `search*Schema`, calls the
+`search*Service` (returning `AsyncAppResult<Paginated…>`) directly (no Eden on the
+server), handles a failed result inline, and hands the page to the client
+`data-table.tsx` as `initial…`; `data-table.tsx` wires `useDataTable`
+(`shallow:false`, wrapped in a `useTransition`) so any URL change re-runs the RSC.
+Mutations `router.refresh()` the RSC (no client list query to invalidate). A
+`page`-sibling `error.tsx` is the backstop for unexpected RSC throws.
 
 **Server contract:** the list endpoint / service takes `{ page, perPage, sort, <filters>, q }`
 and returns `{ items, total, page, perPage, pageCount }`. Ownership is scoped by
