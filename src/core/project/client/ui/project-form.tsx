@@ -6,11 +6,7 @@ import {
     createProjectSchema,
     projectStatusSchema,
 } from "@/core/project/domain/schemas";
-import type {
-    CreateProject,
-    Project,
-    ProjectStatus,
-} from "@/core/project/domain/types";
+import type { Project, ProjectStatus } from "@/core/project/domain/types";
 import { Button } from "@/frontend/components/ui/button";
 import {
     DialogClose,
@@ -36,9 +32,11 @@ function getFieldErrors(field: AnyFieldApi) {
  * validation runs against a variant of {@link createProjectSchema} where
  * `description`/`status` are required strings rather than optional - this
  * keeps the TanStack Form value type and the zod input type identical.
- * `description` still accepts `""` (no min-length constraint); an empty
- * value is mapped back to `undefined` in `onSubmit` to satisfy
- * {@link CreateProject}.
+ * `description` still accepts `""` (no min-length constraint); an empty value
+ * is mapped back in `onSubmit` to `undefined` when creating (createProjectSchema's
+ * `description` is optional, not nullable) or `null` when editing (so the PUT
+ * body explicitly clears an existing description via `updateProjectSchema`,
+ * which allows `null`).
  */
 const projectFormSchema = createProjectSchema.extend({
     description: z.string().max(2000),
@@ -52,7 +50,11 @@ export function ProjectForm({
 }: {
     editing: Project | null;
     submitting: boolean;
-    onSubmit: (values: CreateProject) => void;
+    onSubmit: (values: {
+        name: string;
+        description?: string | null;
+        status: ProjectStatus;
+    }) => void;
 }) {
     const form = useAppForm({
         defaultValues: {
@@ -64,11 +66,14 @@ export function ProjectForm({
             onChange: projectFormSchema,
         },
         onSubmit: ({ value }) => {
+            const trimmedDescription = value.description.trim();
             onSubmit({
                 ...value,
-                description: value.description?.trim()
-                    ? value.description.trim()
-                    : undefined,
+                description: trimmedDescription
+                    ? trimmedDescription
+                    : editing
+                      ? null
+                      : undefined,
             });
         },
     });

@@ -5,8 +5,8 @@ import { parseAsString, useQueryState } from "nuqs";
 import { useState } from "react";
 import { toast } from "sonner";
 import type {
-    CreateProject,
     PaginatedProjects,
+    ProjectStatus,
 } from "@/core/project/domain/types";
 import { DataTable } from "@/frontend/components/data-table/data-table";
 import { DataTableToolbar } from "@/frontend/components/data-table/data-table-toolbar";
@@ -69,7 +69,11 @@ export function ProjectScreen({
         debouncedSearch(value);
     }
 
-    function handleSubmit(values: CreateProject) {
+    function handleSubmit(values: {
+        name: string;
+        description?: string | null;
+        status: ProjectStatus;
+    }) {
         if (editingProject) {
             updateProject.mutate(values, {
                 onSuccess: () => {
@@ -80,13 +84,16 @@ export function ProjectScreen({
             });
             return;
         }
-        createProject.mutate(values, {
-            onSuccess: () => {
-                toast.success("Project created");
-                closeForm();
+        createProject.mutate(
+            { ...values, description: values.description ?? undefined },
+            {
+                onSuccess: () => {
+                    toast.success("Project created");
+                    closeForm();
+                },
+                onError: () => toast.error("Create failed"),
             },
-            onError: () => toast.error("Create failed"),
-        });
+        );
     }
 
     function handleDelete() {
@@ -137,6 +144,7 @@ export function ProjectScreen({
                 }}
             >
                 <ProjectForm
+                    key={editingProject?.id ?? "new"}
                     editing={editingProject}
                     submitting={
                         createProject.isPending || updateProject.isPending

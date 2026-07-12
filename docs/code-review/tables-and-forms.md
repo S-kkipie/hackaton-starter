@@ -86,3 +86,13 @@ The zod domain schema is the validation source of truth (reuse
 
 **Check:** a new form uses `useAppForm` + a zod validator + `Field`/`FieldError`,
 not a raw `useState`-controlled form; validation reuses the domain schema.
+
+**Dialog/modal forms must remount per record.** `useAppForm`'s `defaultValues`
+only seed state once, on mount — they do NOT re-sync if the record being
+edited changes while the form instance stays mounted (e.g. a `ProjectForm`
+that lives for the life of the screen, switching between "new" and "edit row
+X"). Give the form element a `key` derived from the edited record's id (e.g.
+`key={editing?.id ?? "new"}`) so React remounts a fresh instance — and
+reseeds `defaultValues` — whenever the target record changes. Without this,
+opening "Edit" after the form has already mounted once shows stale or blank
+values.
