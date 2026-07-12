@@ -5,23 +5,21 @@ import { toast } from "sonner";
 import type { CreateProject, Project } from "@/core/project/domain/types";
 import { Button } from "@/frontend/components/ui/button";
 import { Dialog, DialogTrigger } from "@/frontend/components/ui/dialog";
-import {
-    useCreateProject,
-    useDeleteProject,
-    useProjects,
-    useUpdateProject,
-} from "../hooks";
+import { useProjects } from "../hooks";
 import { ProjectCard } from "./project-card";
 import { ProjectForm } from "./project-form";
 
 export function ProjectScreen() {
-    const { projects, isLoading } = useProjects();
-    const createProject = useCreateProject();
-    const updateProject = useUpdateProject();
-    const deleteProject = useDeleteProject();
+    const { useList, useCreate, useUpdate, useDelete } = useProjects();
 
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<Project | null>(null);
+
+    const listQuery = useList();
+    const projects = listQuery.data?.response ?? [];
+    const createProject = useCreate();
+    const updateProject = useUpdate(editing?.id ?? "");
+    const deleteProject = useDelete();
 
     function openCreate() {
         setEditing(null);
@@ -35,16 +33,13 @@ export function ProjectScreen() {
 
     function handleSubmit(values: CreateProject) {
         if (editing) {
-            updateProject.mutate(
-                { id: editing.id, data: values },
-                {
-                    onSuccess: () => {
-                        toast.success("Project updated");
-                        setOpen(false);
-                    },
-                    onError: () => toast.error("Update failed"),
+            updateProject.mutate(values, {
+                onSuccess: () => {
+                    toast.success("Project updated");
+                    setOpen(false);
                 },
-            );
+                onError: () => toast.error("Update failed"),
+            });
             return;
         }
         createProject.mutate(values, {
@@ -81,7 +76,7 @@ export function ProjectScreen() {
                 </Dialog>
             </div>
 
-            {isLoading ? (
+            {listQuery.isLoading ? (
                 <p className="text-muted-foreground text-sm">Loading…</p>
             ) : projects.length === 0 ? (
                 <p className="text-muted-foreground text-sm">

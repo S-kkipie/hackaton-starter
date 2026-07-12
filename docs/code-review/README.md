@@ -5,6 +5,7 @@ These are the invariants the reference `Project` domain follows; every new domai
 cloned from it must follow them too.
 
 - [types-schemas.md](./types-schemas.md) — zod as the single type source; **never re-export types**.
+- [frontend-data-fetching.md](./frontend-data-fetching.md) — Eden proxy; **one factory hook per domain**.
 
 ## Architecture recap (where code goes)
 

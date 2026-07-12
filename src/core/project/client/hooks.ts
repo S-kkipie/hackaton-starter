@@ -1,56 +1,52 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { UpdateProject } from "@/core/project/domain/types";
+
 import { useElysia } from "@/frontend/lib/eden";
 
-/** Bind the projects domain once; every call hangs off `client`. */
-function useProjectsClient() {
-    return useElysia().projects;
-}
-
-export function useProjects() {
-    const client = useProjectsClient();
-    const query = useQuery(client.get.queryOptions());
-    return { ...query, projects: query.data?.response ?? [] };
-}
-
-export function useProject(id: string | undefined) {
-    const client = useProjectsClient();
-    return useQuery({
-        ...client({ id: id ?? "" }).get.queryOptions(),
-        enabled: !!id,
-    });
-}
-
-export function useCreateProject() {
-    const client = useProjectsClient();
+/**
+ * Client hooks for the projects domain. Calls go through the Eden options proxy
+ * (`useElysia()`) and return the response envelope (`{ response, code, status }`);
+ * read records from `data.response`. `useGetById` stays disabled until a truthy
+ * id; `useUpdate` closes over the target id at call-site, while `useDelete` takes
+ * the id as a mutation variable so one hook instance can drive any of N cards.
+ */
+export const useProjects = () => {
+    const client = useElysia().projects;
     const queryClient = useQueryClient();
-    const listKey = client.get.queryKey();
-    return useMutation({
-        ...client.post.mutationOptions(),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: listKey }),
-    });
-}
+    const LIST_KEY = client.get.queryKey();
 
-export function useUpdateProject() {
-    const client = useProjectsClient();
-    const queryClient = useQueryClient();
-    const listKey = client.get.queryKey();
-    return useMutation({
-        mutationFn: (vars: { id: string; data: UpdateProject }) =>
-            client({ id: vars.id }).put.mutationOptions().mutationFn(vars.data),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: listKey }),
-    });
-}
+    const useList = () => useQuery(client.get.queryOptions());
 
-export function useDeleteProject() {
-    const client = useProjectsClient();
-    const queryClient = useQueryClient();
-    const listKey = client.get.queryKey();
-    return useMutation({
-        mutationFn: (id: string) =>
-            client({ id }).delete.mutationOptions().mutationFn(undefined),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: listKey }),
-    });
-}
+    const useGetById = (id: string | undefined) =>
+        useQuery({
+            ...client({ id: id ?? "" }).get.queryOptions(),
+            enabled: !!id,
+        });
+
+    const useCreate = () =>
+        useMutation(
+            client.post.mutationOptions({
+                onSuccess: () =>
+                    queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+            }),
+        );
+
+    const useUpdate = (id: string) =>
+        useMutation(
+            client({ id }).put.mutationOptions({
+                onSuccess: () =>
+                    queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+            }),
+        );
+
+    const useDelete = () =>
+        useMutation({
+            mutationFn: (id: string) =>
+                client({ id }).delete.mutationOptions().mutationFn(undefined),
+            onSuccess: () =>
+                queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+        });
+
+    return { useList, useGetById, useCreate, useUpdate, useDelete };
+};
