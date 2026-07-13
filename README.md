@@ -10,6 +10,16 @@ Next 16 · React 19 · Elysia (`/api/v1`) · Better Auth (email+password) ·
 Drizzle ORM + node-postgres · Eden + `eden-tanstack-react-query` · zod ·
 shadcn/ui + Tailwind v4 · LogTape · Vitest · Biome.
 
+## Quick start
+
+Scaffold a new project with the CLI (see [`cli/create-skippie-hackaton`](./cli/create-skippie-hackaton)):
+
+```bash
+npx create-skippie-hackaton my-app
+```
+
+Or clone this repo directly and follow **Setup** below.
+
 ## Setup
 
 ```bash
