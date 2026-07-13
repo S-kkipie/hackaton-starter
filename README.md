@@ -12,10 +12,10 @@ shadcn/ui + Tailwind v4 · LogTape · Vitest · Biome.
 
 ## Quick start
 
-Scaffold a new project with the CLI (see [`cli/create-skippie-hackaton`](./cli/create-skippie-hackaton)):
+Scaffold a new project with the CLI (see [`cli/create-shipkit`](./cli/create-shipkit)):
 
 ```bash
-npx create-skippie-hackaton my-app
+npx create-shipkit my-app
 ```
 
 Or clone this repo directly and follow **Setup** below.

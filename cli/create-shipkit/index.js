@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// create-skippie-hackaton — scaffold the Skippie hackathon starter.
+// create-shipkit — scaffold the Skippie hackathon starter.
 // Zero runtime dependencies: shallow-clones the template repo, strips the
 // scaffolder + internal docs, renames the project, and re-inits git.
 
@@ -44,7 +44,7 @@ function toPackageName(name) {
 async function resolveTargetDir() {
     const arg = process.argv[2];
     if (arg) return arg;
-    if (!stdin.isTTY) die("Usage: create-skippie-hackaton <project-directory>");
+    if (!stdin.isTTY) die("Usage: create-shipkit <project-directory>");
     const rl = readline.createInterface({ input: stdin, output: stdout });
     const answer = await rl.question(
         `${color(c.cyan, "?")} Project directory: ${color(c.dim, "(my-hackaton-app)")} `,
@@ -75,7 +75,7 @@ function main() {
         assertGit();
 
         console.log(
-            `\n${color(c.bold, "create-skippie-hackaton")} — scaffolding ${color(c.cyan, appName)}\n`,
+            `\n${color(c.bold, "create-shipkit")} — scaffolding ${color(c.cyan, appName)}\n`,
         );
 
         // 1. Shallow clone the template.
@@ -130,7 +130,7 @@ function main() {
                     "commit",
                     "--quiet",
                     "-m",
-                    "Initial commit from create-skippie-hackaton",
+                    "Initial commit from create-shipkit",
                 ],
                 { cwd: targetDir, stdio: "ignore" },
             );
