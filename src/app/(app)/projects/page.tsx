@@ -1,22 +1,35 @@
 import type { SearchParams } from "nuqs/server";
-import { ProjectsTableServer } from "@/core/project/client/ui/table/server";
+import { Suspense } from "react";
+import ProjectsTableServer from "@/core/project/client/ui/table/server";
+import { projectSearchSchema } from "@/core/project/domain/schemas";
 import { projectsSearchParamsCache } from "@/core/project/domain/search-params";
-import { requireAuth } from "@/server/auth/require-auth";
+import { DataTableSkeleton } from "@/frontend/components/data-table/data-table-skeleton";
 
 /**
- * Server entry for `/projects`. Parses the URL table state into the
- * request-scoped search-params cache, then renders the table `server.tsx` (the
- * SSR data source), which reads the cache and calls the search service. The
- * client table writes URL params with `shallow:false`, so any
- * page/sort/filter/search change re-runs this RSC.
+ * Server entry for `/projects`. Parses the URL into a `ProjectSearch` and
+ * renders the table `server.tsx` under a `<Suspense>` boundary — `server.tsx`
+ * hands the client table an *unawaited* promise (`React.use`), so this page
+ * streams the shell immediately and the table fills in once the query
+ * resolves, instead of blocking the whole route on the DB round-trip.
  */
 export default async function ProjectsPage({
     searchParams,
 }: {
     searchParams: Promise<SearchParams>;
 }) {
-    const { user } = await requireAuth();
-    await projectsSearchParamsCache.parse(searchParams);
+    const options = projectSearchSchema.parse(
+        await projectsSearchParamsCache.parse(searchParams),
+    );
 
-    return <ProjectsTableServer userId={user.id} />;
+    return (
+        <Suspense
+            fallback={
+                <div className="mx-auto w-full max-w-5xl p-6">
+                    <DataTableSkeleton columnCount={6} filterCount={2} />
+                </div>
+            }
+        >
+            <ProjectsTableServer options={options} />
+        </Suspense>
+    );
 }

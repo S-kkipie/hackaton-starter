@@ -7,7 +7,7 @@ import { useElysia } from "@/frontend/lib/eden";
 
 /**
  * Client mutation hooks for the projects domain. The list is RSC-driven (see
- * `/projects/page.tsx` → `server.tsx` → `ProjectsDataTable`) so there is no
+ * `/projects/page.tsx` → `server.tsx` → `ProjectsTable`) so there is no
  * client list query left to invalidate — each mutation's `onSuccess` calls
  * `router.refresh()` instead, which re-runs the server component against the
  * current URL search params (page/sort/filters/search) and streams the next

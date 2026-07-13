@@ -15,44 +15,43 @@ import {
 import { useProjects } from "../../hooks";
 
 interface DeleteProjectModalProps {
-    /** The project to delete, or `null` when the modal is closed. */
-    project: Project | null;
-    onClose: () => void;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    /** The project to delete. The caller conditionally renders this modal per
+     *  row action, so `project` is always set while it's mounted. */
+    project: Project;
+    /** Called after a successful delete (e.g. to clear the row's selection). */
+    onSuccess?: () => void;
 }
 
 /** Confirmation modal for deleting a project. */
 export function DeleteProjectModal({
+    open,
+    onOpenChange,
     project,
-    onClose,
+    onSuccess,
 }: DeleteProjectModalProps) {
     const { useDelete } = useProjects();
     const deleteProject = useDelete();
 
     function handleDelete() {
-        if (!project) return;
         deleteProject.mutate(project.id, {
             onSuccess: () => {
                 toast.success("Project deleted");
-                onClose();
+                onOpenChange(false);
+                onSuccess?.();
             },
             onError: () => toast.error("Delete failed"),
         });
     }
 
     return (
-        <Dialog
-            open={project !== null}
-            onOpenChange={(open) => {
-                if (!open) onClose();
-            }}
-        >
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Delete project</DialogTitle>
                     <DialogDescription>
-                        {project
-                            ? `This will permanently delete "${project.name}". This action cannot be undone.`
-                            : ""}
+                        {`This will permanently delete "${project.name}". This action cannot be undone.`}
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>

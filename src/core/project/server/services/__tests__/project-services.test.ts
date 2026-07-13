@@ -87,7 +87,7 @@ const searchParams: ProjectSearch = {
     perPage: 2,
     sort: [],
     status: [],
-    q: "",
+    name: "",
 };
 
 describe("searchProjectsService", () => {

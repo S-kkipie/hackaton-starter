@@ -11,8 +11,9 @@ manual mode (`manualPagination/Sorting/Filtering`), state synced to the URL via
 nuqs (`page`/`perPage`/`sort` + one key per filterable column), 300ms-debounced
 filter writes. It requires `TData extends { id }` and a `pageCount`. Compose with
 `@/frontend/components/data-table/*` (`DataTable`, `DataTableToolbar`,
-`DataTableColumnHeader`, `DataTableViewOptions`, faceted/date/range/slider
-filters, pagination, skeleton, sort-list, action-bar, `DescriptionCell`).
+`DataTableSortList`, `DataTableActionBar`/`DataTableActionBarSelection`/
+`DataTableActionBarAction`, faceted/date/range/slider filters, pagination,
+skeleton, `DescriptionCell`).
 
 Canonical wiring (see `core/project`):
 
@@ -20,30 +21,47 @@ Canonical wiring (see `core/project`):
 core/<domain>/
   domain/search-params.ts          nuqs parsers + createSearchParamsCache (keys MUST match what useDataTable writes)
   client/ui/table/
-    <domain>-columns.tsx           ColumnDef[]: DataTableColumnHeader, cells, meta{label,variant,options} for filters, an actions column dispatching setRowAction
-    data-table.tsx                  "use client" — wires useDataTable to the generic data-table components + modals; receives the awaited service page as `initial…` (no client fetch)
-    server.tsx                      RSC (the SSR source) — reads the params cache, calls search*Service, renders <…DataTable initial…/>
-app/(app)/<domain>/page.tsx        RSC — searchParamsCache.parse(searchParams), then renders <…TableServer userId/>
+    columns.tsx                     default-exports getXTableColumns({ setRowAction }): ColumnDef[] — plain <div> headers
+                                     (sorting is via DataTableSortList, not header clicks), meta{label,variant,icon,options}
+                                     on filterable columns, an actions column dispatching setRowAction
+    action-bar.tsx                  default-exports XTableActionBar({ table }) — bulk/export actions shown while rows are selected
+    data-table.tsx                  "use client" — default-exports XTable({ promises }); reads the page with
+                                     `React.use(promises)`, wires useDataTable + the modals (no client fetch)
+    server.tsx                      RSC (the SSR source) — default-exports XTableServer({ options }); hands the client an
+                                     UNAWAITED Promise.all([resolveResult(search*Service(...))])
+app/(app)/<domain>/page.tsx        RSC — parses searchParamsCache, renders <Suspense fallback={<DataTableSkeleton .../>}><XTableServer options/></Suspense>
 ```
 
-Data source is **RSC**, split into three files: `page.tsx` parses the URL into the
-request-scoped `createSearchParamsCache` and renders `server.tsx`; `server.tsx`
-reads the cache (`.all()`), runs it through the domain `search*Schema`, calls the
-`search*Service` (returning `AsyncAppResult<Paginated…>`) directly (no Eden on the
-server), handles a failed result inline, and hands the page to the client
-`data-table.tsx` as `initial…`; `data-table.tsx` wires `useDataTable`
-(`shallow:false`, wrapped in a `useTransition`) so any URL change re-runs the RSC.
-Mutations `router.refresh()` the RSC (no client list query to invalidate). A
-`page`-sibling `error.tsx` is the backstop for unexpected RSC throws.
+Data source is **RSC, streamed**: `page.tsx` parses the URL into the request-scoped
+`createSearchParamsCache`, runs it through the domain `search*Schema`, and renders
+`server.tsx` under a `<Suspense>` boundary. `server.tsx` does **not** `await` the
+service — it hands the client `Promise.all([resolveResult(search*Service(...))])`
+straight through as `promises`. The client `data-table.tsx` unwraps that with
+`const [{ items, pageCount }] = React.use(promises)`, which suspends the boundary
+until the query resolves (and re-throws an `AppErrorException` on the error branch,
+caught by the `page`-sibling `error.tsx`) instead of blocking the RSC response.
+`data-table.tsx` wires `useDataTable` (`shallow:false`) so any page/sort/filter
+change re-runs `server.tsx`. Column-level text/select filters (`meta.variant`) live
+in the `DataTableToolbar`, not a page-level search box; sorting is exposed via
+`DataTableSortList` in the toolbar rather than clickable column headers. Bulk
+actions (e.g. CSV export via `@/frontend/lib/export`'s `exportTableToCSV`) live in
+`action-bar.tsx`, passed to `<DataTable actionBar={...}>`. Row actions (`update`/
+`delete`) are conditionally-rendered modals — `{rowAction?.variant === "update" &&
+rowAction.row && <UpdateXModal open onOpenChange={() => setRowAction(null)}
+x={rowAction.row.original} />}` — so the modal always receives a non-null record
+and remounts for free on every new row action; mutations `router.refresh()` the
+RSC (no client list query to invalidate).
 
-**Server contract:** the list endpoint / service takes `{ page, perPage, sort, <filters>, q }`
+**Server contract:** the list endpoint / service takes `{ page, perPage, sort, <filters> }`
 and returns `{ items, total, page, perPage, pageCount }`. Ownership is scoped by
 `userId` in the repository WHERE (rows AND count). Sort column ids are zod-enum
-whitelisted before reaching the query.
+whitelisted before reaching the query. Text-search filters go through a normal
+filterable column (e.g. `name`), not a separate `q` param.
 
 **Check:** a new table uses `useDataTable` + `pageCount` + a `search-params.ts`
-whose keys match the table's URL writes; no hand-rolled `useReactTable` with
-client-side filtering.
+whose keys match the table's URL writes; `server.tsx` passes an unawaited
+`Promise.all` and the client reads it with `React.use`; no hand-rolled
+`useReactTable` with client-side filtering.
 
 ## 2. Forms use TanStack Form + the Field primitive `MAJOR`
 
@@ -97,11 +115,12 @@ core/<domain>/client/
                                  `_…Form()` (for the ReturnType api type),
                                  `getFieldErrors`, the `…FormUI`, and the exported
                                  `…Form` component (useAppForm + fields)
-  ui/modals/                     dialogs live here
+  ui/modals/                     dialogs live here; { open, onOpenChange } + a non-null record prop (update/delete
+                                 are conditionally rendered by the table, so the record is never null while mounted)
     create-<domain>-modal.tsx    <Dialog> + <…Form> + useCreate
-    update-<domain>-modal.tsx    <Dialog> + keyed <…Form defaultValues> + useUpdate
-    delete-<domain>-modal.tsx    <Dialog> confirm + useDelete
-  ui/<domain>-screen.tsx         table + toolbar + the three modals (controlled by rowAction)
+    update-<domain>-modal.tsx    <Dialog> + <…Form defaultValues> + useUpdate
+    delete-<domain>-modal.tsx    <Dialog> confirm + useDelete + onSuccess?
+  ui/table/data-table.tsx        table + toolbar + the three modals (controlled by rowAction)
 ```
 
 The form emits raw `…FormValues`; each modal maps the empty-description case to
@@ -114,10 +133,11 @@ domain schema; dialogs live in `ui/modals/`, form definition in `ui/forms/`.
 
 **Dialog/modal forms must remount per record.** `useAppForm`'s `defaultValues`
 only seed state once, on mount — they do NOT re-sync if the record being
-edited changes while the form instance stays mounted (e.g. a `ProjectForm`
-that lives for the life of the screen, switching between "new" and "edit row
-X"). Give the form element a `key` derived from the edited record's id (e.g.
-`key={editing?.id ?? "new"}`) so React remounts a fresh instance — and
-reseeds `defaultValues` — whenever the target record changes. Without this,
-opening "Edit" after the form has already mounted once shows stale or blank
-values.
+edited changes while the form instance stays mounted. The table conditionally
+renders the update/delete modal itself (`rowAction?.variant === "update" &&
+rowAction.row && <UpdateXModal ... x={rowAction.row.original} />`), so the
+modal (and the `…Form` inside it) unmounts when `rowAction` is cleared and
+remounts fresh — reseeding `defaultValues` — the next time a row action opens
+it. Don't reintroduce an `open`-boolean-with-nullable-record modal that stays
+mounted across records; that reintroduces the stale-`defaultValues` bug and
+needs an explicit `key` to work around it.

@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray } from "drizzle-orm";
 import type { ProjectSearch } from "@/core/project/domain/types";
 import { db } from "@/server/drizzle/db";
 import {
@@ -18,17 +18,12 @@ export async function findProjectsPage(
     userId: string,
     params: ProjectSearch,
 ): Promise<{ rows: ProjectRow[]; total: number }> {
-    const { page, perPage, sort, status, q } = params;
+    const { page, perPage, sort, status, name } = params;
 
     const where = and(
         eq(projects.userId, userId),
         status.length > 0 ? inArray(projects.status, status) : undefined,
-        q
-            ? or(
-                  ilike(projects.name, `%${q}%`),
-                  ilike(projects.description, `%${q}%`),
-              )
-            : undefined,
+        name ? ilike(projects.name, `%${name}%`) : undefined,
     );
 
     const orderBy = sort.length

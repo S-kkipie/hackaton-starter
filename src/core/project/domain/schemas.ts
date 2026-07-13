@@ -69,7 +69,7 @@ export const projectSearchSchema = z.object({
             z.array(projectStatusSchema),
         )
         .catch([]),
-    q: z.string().trim().default(""),
+    name: z.string().trim().default(""),
 });
 
 /**

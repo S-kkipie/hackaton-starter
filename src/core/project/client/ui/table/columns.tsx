@@ -1,8 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { EllipsisIcon } from "lucide-react";
+import { EllipsisIcon, TagIcon, TextIcon } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import type { Project, ProjectStatus } from "@/core/project/domain/types";
-import { DataTableColumnHeader } from "@/frontend/components/data-table/data-table-column-header";
 import DescriptionCell from "@/frontend/components/data-table/description-cell";
 import { Badge } from "@/frontend/components/ui/badge";
 import { Button } from "@/frontend/components/ui/button";
@@ -11,38 +10,33 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/frontend/components/ui/dropdown-menu";
-import { formatRelativeTime } from "@/frontend/lib/format";
+import { formatDate } from "@/frontend/lib/format";
 import type { DataTableRowAction } from "@/frontend/types/data-table";
-
-const STATUS_BADGE_VARIANT: Record<ProjectStatus, "default" | "secondary"> = {
-    active: "default",
-    archived: "secondary",
-};
 
 const STATUS_OPTIONS: { label: string; value: ProjectStatus }[] = [
     { label: "Active", value: "active" },
     { label: "Archived", value: "archived" },
 ];
 
-interface GetProjectColumnsProps {
+interface GetProjectTableColumnsProps {
     setRowAction: Dispatch<SetStateAction<DataTableRowAction<Project> | null>>;
 }
 
 /**
- * Column definitions for the projects data table. `status` carries
- * `enableColumnFilter` + faceted `meta.options` so the shared `useDataTable`
- * hook wires a `?status=` URL parser and `DataTableToolbar` renders the
- * multi-select filter; `name`/`createdAt` are sortable through
- * `DataTableColumnHeader`, matching the `sort` URL contract in
- * `search-params.ts`. The `actions` column funnels Edit/Delete into
- * `setRowAction`, read back by `ProjectsDataTable` to drive the edit/delete
- * dialogs.
+ * Column definitions for the projects data table. Headers are plain `<div>`s —
+ * sorting is driven by `DataTableSortList` in the toolbar, not per-column
+ * header clicks. `name`/`status` carry `enableColumnFilter` + `meta.variant` so
+ * the toolbar's filter drawer renders a control for them and `useDataTable`
+ * wires a matching `?name=`/`?status=` URL parser (see `search-params.ts`). The
+ * `actions` column funnels Edit/Delete into `setRowAction`, read back by
+ * `ProjectsTable` to drive the edit/delete dialogs.
  */
-export function getProjectColumns({
+export default function getProjectTableColumns({
     setRowAction,
-}: GetProjectColumnsProps): ColumnDef<Project>[] {
+}: GetProjectTableColumnsProps): ColumnDef<Project>[] {
     return [
         {
             id: "select",
@@ -74,31 +68,19 @@ export function getProjectColumns({
         {
             id: "name",
             accessorKey: "name",
-            header: ({ column }) => (
-                <DataTableColumnHeader column={column} title="Name" />
-            ),
+            header: () => <div className="font-medium">Name</div>,
             cell: ({ row }) => (
-                <span className="font-medium">{row.original.name}</span>
+                <span className="block max-w-64 truncate font-medium">
+                    {row.original.name}
+                </span>
             ),
             enableSorting: true,
-            meta: { label: "Name" },
-        },
-        {
-            id: "status",
-            accessorKey: "status",
-            header: ({ column }) => (
-                <DataTableColumnHeader column={column} title="Status" />
-            ),
-            cell: ({ row }) => (
-                <Badge variant={STATUS_BADGE_VARIANT[row.original.status]}>
-                    {row.original.status}
-                </Badge>
-            ),
             enableColumnFilter: true,
             meta: {
-                label: "Status",
-                variant: "multiSelect",
-                options: STATUS_OPTIONS,
+                label: "Name",
+                placeholder: "Search by name…",
+                variant: "text",
+                icon: TextIcon,
             },
         },
         {
@@ -111,20 +93,36 @@ export function getProjectColumns({
                 />
             ),
             enableSorting: false,
+            enableColumnFilter: false,
             meta: { label: "Description" },
+        },
+        {
+            id: "status",
+            accessorKey: "status",
+            header: () => <div className="font-medium">Status</div>,
+            cell: ({ row }) => (
+                <Badge variant="outline">{row.original.status}</Badge>
+            ),
+            enableSorting: true,
+            enableColumnFilter: true,
+            meta: {
+                label: "Status",
+                variant: "select",
+                icon: TagIcon,
+                options: STATUS_OPTIONS,
+            },
         },
         {
             id: "createdAt",
             accessorKey: "createdAt",
-            header: ({ column }) => (
-                <DataTableColumnHeader column={column} title="Created" />
-            ),
-            cell: ({ row }) => (
+            header: () => <div className="font-medium">Created</div>,
+            cell: ({ cell }) => (
                 <span className="text-muted-foreground text-sm">
-                    {formatRelativeTime(row.original.createdAt)}
+                    {formatDate(cell.getValue<string>())}
                 </span>
             ),
             enableSorting: true,
+            enableColumnFilter: false,
             meta: { label: "Created" },
         },
         {
@@ -149,6 +147,7 @@ export function getProjectColumns({
                         >
                             Edit
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem
                             variant="destructive"
                             onSelect={() =>

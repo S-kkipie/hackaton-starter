@@ -10,8 +10,9 @@ import type { Project } from "./types";
 /**
  * nuqs parsers describing the projects table URL state. Keys MUST match what
  * `useDataTable` writes on the client (`page`, `perPage`, `sort`, plus `status`
- * since the `status` column is filterable, and `q` for the free-text search) so
- * the server cache below and the client table engine agree on one URL contract.
+ * and `name` since those columns are filterable — `useDataTable` wires a
+ * `?status=`/`?name=` URL parser per filterable column) so the server cache
+ * below and the client table engine agree on one URL contract.
  */
 export const projectSearchParsers = {
     page: parseAsInteger.withDefault(1),
@@ -20,7 +21,7 @@ export const projectSearchParsers = {
         { id: "createdAt", desc: true },
     ]),
     status: parseAsArrayOf(parseAsString).withDefault([]),
-    q: parseAsString.withDefault(""),
+    name: parseAsString.withDefault(""),
 };
 
 /**

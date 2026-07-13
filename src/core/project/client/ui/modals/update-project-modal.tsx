@@ -14,18 +14,21 @@ import type { ProjectFormValues } from "../../validation";
 import { ProjectForm } from "../forms/project-form";
 
 interface UpdateProjectModalProps {
-    /** The project being edited, or `null` when the modal is closed. */
-    project: Project | null;
-    onClose: () => void;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    /** The project being edited. The caller conditionally renders this modal
+     *  per row action, so `project` is always set while it's mounted. */
+    project: Project;
 }
 
 /** Modal for editing a project. Empty description → `null` (clears the column). */
 export function UpdateProjectModal({
+    open,
+    onOpenChange,
     project,
-    onClose,
 }: UpdateProjectModalProps) {
     const { useUpdate } = useProjects();
-    const updateProject = useUpdate(project?.id ?? "");
+    const updateProject = useUpdate(project.id);
 
     function handleSubmit(values: ProjectFormValues) {
         updateProject.mutate(
@@ -37,7 +40,7 @@ export function UpdateProjectModal({
             {
                 onSuccess: () => {
                     toast.success("Project updated");
-                    onClose();
+                    onOpenChange(false);
                 },
                 onError: () => toast.error("Update failed"),
             },
@@ -45,12 +48,7 @@ export function UpdateProjectModal({
     }
 
     return (
-        <Dialog
-            open={project !== null}
-            onOpenChange={(open) => {
-                if (!open) onClose();
-            }}
-        >
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Edit project</DialogTitle>
@@ -58,19 +56,15 @@ export function UpdateProjectModal({
                         Update your project details.
                     </DialogDescription>
                 </DialogHeader>
-                {/* keyed by id so the form remounts + reseeds per record */}
-                {project && (
-                    <ProjectForm
-                        key={project.id}
-                        defaultValues={{
-                            name: project.name,
-                            description: project.description ?? "",
-                            status: project.status,
-                        }}
-                        onSubmit={handleSubmit}
-                        disabled={updateProject.isPending}
-                    />
-                )}
+                <ProjectForm
+                    defaultValues={{
+                        name: project.name,
+                        description: project.description ?? "",
+                        status: project.status,
+                    }}
+                    onSubmit={handleSubmit}
+                    disabled={updateProject.isPending}
+                />
             </DialogContent>
         </Dialog>
     );

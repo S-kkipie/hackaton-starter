@@ -131,7 +131,7 @@ describe("projectSearchSchema", () => {
         expect(defaults.perPage).toBe(20);
     });
 
-    it("trims q", () => {
-        expect(projectSearchSchema.parse({ q: "  hi  " }).q).toBe("hi");
+    it("trims name", () => {
+        expect(projectSearchSchema.parse({ name: "  hi  " }).name).toBe("hi");
     });
 });
