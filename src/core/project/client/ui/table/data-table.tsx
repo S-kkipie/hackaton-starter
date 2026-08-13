@@ -48,7 +48,7 @@ export default function ProjectsTable({
         clearOnDefault: true,
         initialState: {
             sorting: [{ id: "createdAt", desc: true }],
-            columnPinning: { right: ["actions"] },
+            columnPinning: { start: [], end: ["actions"] },
         },
     });
 

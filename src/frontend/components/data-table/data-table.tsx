@@ -1,5 +1,6 @@
 "use client";
 import { flexRender, type Table as TanstackTable } from "@tanstack/react-table";
+import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { DataTablePagination } from "@/frontend/components/data-table/data-table-pagination";
@@ -22,7 +23,7 @@ import { cn } from "@/frontend/lib/utils";
 
 interface DataTableProps<TData extends { id: string | number }>
     extends React.ComponentProps<"div"> {
-    table: TanstackTable<TData>;
+    table: TanstackTable<TableFeaturesConfig, TData>;
     actionBar?: React.ReactNode;
     clickable?: string;
     getClickableId?: (row: TData) => string | number;

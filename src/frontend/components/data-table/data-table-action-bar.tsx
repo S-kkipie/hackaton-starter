@@ -1,6 +1,8 @@
 "use client";
 
 import type { Table } from "@tanstack/react-table";
+import type { RowData } from "@tanstack/react-table";
+import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import { Loader, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import * as React from "react";
@@ -14,14 +16,14 @@ import {
 } from "@/frontend/components/ui/tooltip";
 import { cn } from "@/frontend/lib/utils";
 
-interface DataTableActionBarProps<TData>
+interface DataTableActionBarProps<TData extends RowData>
     extends React.ComponentProps<typeof motion.div> {
-    table: Table<TData>;
+    table: Table<TableFeaturesConfig, TData>;
     visible?: boolean;
     container?: Element | DocumentFragment | null;
 }
 
-function DataTableActionBar<TData>({
+function DataTableActionBar<TData extends RowData>({
     table,
     visible: visibleProp,
     container: containerProp,
@@ -125,11 +127,11 @@ function DataTableActionBarAction({
     );
 }
 
-interface DataTableActionBarSelectionProps<TData> {
-    table: Table<TData>;
+interface DataTableActionBarSelectionProps<TData extends RowData> {
+    table: Table<TableFeaturesConfig, TData>;
 }
 
-function DataTableActionBarSelection<TData>({
+function DataTableActionBarSelection<TData extends RowData>({
     table,
 }: DataTableActionBarSelectionProps<TData>) {
     const onClearSelection = React.useCallback(() => {
