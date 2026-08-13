@@ -1,6 +1,8 @@
 "use client";
 
 import type { Column } from "@tanstack/react-table";
+import type { RowData } from "@tanstack/react-table";
+import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import * as React from "react";
 
 import {
@@ -88,10 +90,10 @@ function LevelSelect({
     );
 }
 
-export function LocationCascadeFilter<TData>({
+export function LocationCascadeFilter<TData extends RowData>({
     column,
 }: {
-    column: Column<TData, unknown>;
+    column: Column<TableFeaturesConfig, TData, unknown>;
 }) {
     const tree: LocationTree = column.columnDef.meta?.locationTree ?? {};
     const value = (column.getFilterValue() as LocationValue | undefined) ?? {};

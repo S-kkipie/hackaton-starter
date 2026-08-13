@@ -1,6 +1,8 @@
 "use client";
 
 import type { Table } from "@tanstack/react-table";
+import type { RowData } from "@tanstack/react-table";
+import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import { Check, ChevronsUpDown, Settings2 } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/frontend/components/ui/button";
@@ -19,11 +21,11 @@ import {
 } from "@/frontend/components/ui/popover";
 import { cn } from "@/frontend/lib/utils";
 
-interface DataTableViewOptionsProps<TData> {
-    table: Table<TData>;
+interface DataTableViewOptionsProps<TData extends RowData> {
+    table: Table<TableFeaturesConfig, TData>;
 }
 
-export function DataTableViewOptions<TData>({
+export function DataTableViewOptions<TData extends RowData>({
     table,
 }: DataTableViewOptionsProps<TData>) {
     const columns = React.useMemo(

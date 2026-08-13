@@ -1,4 +1,5 @@
 import { createParser } from "nuqs/server";
+import type { RowData } from "@tanstack/react-table";
 import { z } from "zod";
 import type {
     ExtendedColumnFilter,
@@ -57,7 +58,7 @@ export const makeSortingItemSchema = <
             "Defines a sorting rule for a data table column. Only use when the user explicitly requests sorting.",
         );
 
-export const getSortingStateParser = <TData>(
+export const getSortingStateParser = <TData extends RowData>(
     columnIds?: string[] | Set<string>,
 ) => {
     const validKeys = columnIds
@@ -143,7 +144,7 @@ export const makeFilterItemSchema = <
             "Defines a filter rule for a data table column. Only create when the user explicitly requests filtering data. Do NOT call without actual filter values from the user.",
         );
 
-export const getFiltersStateParser = <TData>(
+export const getFiltersStateParser = <TData extends RowData>(
     columnIds?: string[] | Set<string>,
 ) => {
     const validKeys = columnIds

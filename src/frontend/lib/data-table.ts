@@ -1,4 +1,6 @@
 import type { Column } from "@tanstack/react-table";
+import type { RowData } from "@tanstack/react-table";
+import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import type {
     ExtendedColumnFilter,
     FilterOperator,
@@ -6,18 +8,18 @@ import type {
 } from "@/frontend/types/data-table";
 import { dataTableConfig } from "./data-table-config";
 
-export function getCommonPinningStyles<TData>({
+export function getCommonPinningStyles<TData extends RowData>({
     column,
     withBorder = false,
 }: {
-    column: Column<TData>;
+    column: Column<TableFeaturesConfig, TData>;
     withBorder?: boolean;
 }): React.CSSProperties {
     const isPinned = column.getIsPinned();
     const isLastLeftPinnedColumn =
-        isPinned === "left" && column.getIsLastColumn("left");
+        isPinned === "start" && column.getIsLastColumn("start");
     const isFirstRightPinnedColumn =
-        isPinned === "right" && column.getIsFirstColumn("right");
+        isPinned === "end" && column.getIsFirstColumn("end");
 
     return {
         boxShadow: withBorder
@@ -27,9 +29,9 @@ export function getCommonPinningStyles<TData>({
                   ? "4px 0 4px -4px var(--border) inset"
                   : undefined
             : undefined,
-        left: isPinned === "left" ? `${column.getStart("left")}px` : undefined,
+        left: isPinned === "start" ? `${column.getStart("start")}px` : undefined,
         right:
-            isPinned === "right" ? `${column.getAfter("right")}px` : undefined,
+            isPinned === "end" ? `${column.getAfter("end")}px` : undefined,
         opacity: isPinned ? 0.97 : 1,
         position: isPinned ? "sticky" : "relative",
         background: "var(--background)",
@@ -63,7 +65,7 @@ export function getDefaultFilterOperator(filterVariant: FilterVariant) {
     return operators[0]?.value ?? (filterVariant === "text" ? "iLike" : "eq");
 }
 
-export function getValidFilters<TData>(
+export function getValidFilters<TData extends RowData>(
     filters: ExtendedColumnFilter<TData>[],
 ): ExtendedColumnFilter<TData>[] {
     return filters.filter(

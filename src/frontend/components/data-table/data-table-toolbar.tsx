@@ -1,6 +1,8 @@
 "use client";
 
 import type { Column, Table } from "@tanstack/react-table";
+import type { RowData } from "@tanstack/react-table";
+import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import { Filter, X } from "lucide-react";
 import * as React from "react";
 
@@ -30,8 +32,8 @@ import type { Option } from "@/frontend/types/data-table";
 /**
  * Props for the DataTableToolbar component.
  */
-interface DataTableToolbarProps<TData> extends React.ComponentProps<"div"> {
-    table: Table<TData>;
+interface DataTableToolbarProps<TData extends RowData> extends React.ComponentProps<"div"> {
+    table: Table<TableFeaturesConfig, TData>;
     hideSort?: boolean;
     hideViewOptions?: boolean;
 }
@@ -42,7 +44,7 @@ interface DataTableToolbarProps<TData> extends React.ComponentProps<"div"> {
  * @param props - The component props
  * @returns The rendered toolbar
  */
-export function DataTableToolbar<TData>({
+export function DataTableToolbar<TData extends RowData>({
     table,
     children,
     className,
@@ -51,7 +53,7 @@ export function DataTableToolbar<TData>({
     ...props
 }: DataTableToolbarProps<TData>) {
     const [open, setOpen] = React.useState(false);
-    const isFiltered = table.getState().columnFilters.length > 0;
+    const isFiltered = table.store.state.columnFilters.length > 0;
 
     const columns = React.useMemo(
         () => table.getAllColumns().filter((column) => column.getCanFilter()),
@@ -59,7 +61,7 @@ export function DataTableToolbar<TData>({
     );
 
     const activeFiltersCount = React.useMemo(() => {
-        return table.getState().columnFilters.length;
+        return table.store.state.columnFilters.length;
     }, [table]);
 
     const onReset = React.useCallback(() => {
@@ -157,8 +159,8 @@ export function DataTableToolbar<TData>({
 /**
  * Props for the DrawerFilterSection component.
  */
-interface DrawerFilterSectionProps<TData> {
-    column: Column<TData, unknown>;
+interface DrawerFilterSectionProps<TData extends RowData> {
+    column: Column<TableFeaturesConfig, TData, unknown>;
 }
 
 /**
@@ -167,7 +169,7 @@ interface DrawerFilterSectionProps<TData> {
  * @param props - The component props
  * @returns The rendered filter section
  */
-function DrawerFilterSection<TData>({
+function DrawerFilterSection<TData extends RowData>({
     column,
 }: DrawerFilterSectionProps<TData>) {
     const columnMeta = column.columnDef.meta;
@@ -217,8 +219,8 @@ function DrawerFilterSection<TData>({
 /**
  * Props for the InlineFilterControl component.
  */
-interface InlineFilterControlProps<TData> {
-    column: Column<TData, unknown>;
+interface InlineFilterControlProps<TData extends RowData> {
+    column: Column<TableFeaturesConfig, TData, unknown>;
 }
 
 /**
@@ -227,7 +229,7 @@ interface InlineFilterControlProps<TData> {
  * @param props - The component props
  * @returns The rendered inline filter control
  */
-function InlineFilterControl<TData>({
+function InlineFilterControl<TData extends RowData>({
     column,
 }: InlineFilterControlProps<TData>) {
     const columnMeta = column.columnDef.meta;
@@ -297,8 +299,8 @@ function InlineFilterControl<TData>({
 /**
  * Props for the InlineMultiSelectFilter component.
  */
-interface InlineMultiSelectFilterProps<TData> {
-    column: Column<TData, unknown>;
+interface InlineMultiSelectFilterProps<TData extends RowData> {
+    column: Column<TableFeaturesConfig, TData, unknown>;
 }
 
 /**
@@ -307,7 +309,7 @@ interface InlineMultiSelectFilterProps<TData> {
  * @param props - The component props
  * @returns The rendered multi-select filter
  */
-function InlineMultiSelectFilter<TData>({
+function InlineMultiSelectFilter<TData extends RowData>({
     column,
 }: InlineMultiSelectFilterProps<TData>) {
     const columnMeta = column.columnDef.meta;
@@ -372,8 +374,8 @@ function InlineMultiSelectFilter<TData>({
 /**
  * Props for the InlineSelectFilter component.
  */
-interface InlineSelectFilterProps<TData> {
-    column: Column<TData, unknown>;
+interface InlineSelectFilterProps<TData extends RowData> {
+    column: Column<TableFeaturesConfig, TData, unknown>;
 }
 
 /**
@@ -382,7 +384,7 @@ interface InlineSelectFilterProps<TData> {
  * @param props - The component props
  * @returns The rendered select filter
  */
-function InlineSelectFilter<TData>({ column }: InlineSelectFilterProps<TData>) {
+function InlineSelectFilter<TData extends RowData>({ column }: InlineSelectFilterProps<TData>) {
     const columnMeta = column.columnDef.meta;
     const options = columnMeta?.options ?? [];
     const columnFilterValue = column.getFilterValue();
@@ -443,8 +445,8 @@ function getIsValidRange(value: unknown): value is RangeValue {
 /**
  * Props for the InlineRangeFilter component.
  */
-interface InlineRangeFilterProps<TData> {
-    column: Column<TData, unknown>;
+interface InlineRangeFilterProps<TData extends RowData> {
+    column: Column<TableFeaturesConfig, TData, unknown>;
 }
 
 /**
@@ -453,7 +455,7 @@ interface InlineRangeFilterProps<TData> {
  * @param props - The component props
  * @returns The rendered range filter
  */
-function InlineRangeFilter<TData>({ column }: InlineRangeFilterProps<TData>) {
+function InlineRangeFilter<TData extends RowData>({ column }: InlineRangeFilterProps<TData>) {
     const id = React.useId();
     const columnFilterValue = getIsValidRange(column.getFilterValue())
         ? (column.getFilterValue() as RangeValue)

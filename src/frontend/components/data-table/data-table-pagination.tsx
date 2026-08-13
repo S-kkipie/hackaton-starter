@@ -1,4 +1,6 @@
 import type { Table } from "@tanstack/react-table";
+import type { RowData } from "@tanstack/react-table";
+import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import {
     ChevronLeft,
     ChevronRight,
@@ -16,12 +18,12 @@ import {
 } from "@/frontend/components/ui/select";
 import { cn } from "@/frontend/lib/utils";
 
-interface DataTablePaginationProps<TData> extends React.ComponentProps<"div"> {
-    table: Table<TData>;
+interface DataTablePaginationProps<TData extends RowData> extends React.ComponentProps<"div"> {
+    table: Table<TableFeaturesConfig, TData>;
     pageSizeOptions?: number[];
 }
 
-export function DataTablePagination<TData>({
+export function DataTablePagination<TData extends RowData>({
     table,
     pageSizeOptions = [5, 10, 20, 30, 40, 50, 999],
     className,
@@ -52,7 +54,7 @@ export function DataTablePagination<TData>({
                         {"Filas por página"}
                     </p>
                     <Select
-                        value={`${table.getState().pagination.pageSize}`}
+                        value={`${table.store.state.pagination.pageSize}`}
                         onValueChange={(value) => {
                             table.setPageSize(Number(value));
                         }}
@@ -60,7 +62,7 @@ export function DataTablePagination<TData>({
                         <SelectTrigger className="h-8 w-18 data-size:h-8">
                             <SelectValue
                                 placeholder={
-                                    table.getState().pagination.pageSize
+                                    table.store.state.pagination.pageSize
                                 }
                             />
                         </SelectTrigger>
@@ -82,7 +84,7 @@ export function DataTablePagination<TData>({
                     {"Página {current} de {total}"
                         .replace(
                             "{current}",
-                            `${table.getState().pagination.pageIndex + 1}`,
+                            `${table.store.state.pagination.pageIndex + 1}`,
                         )
                         .replace("{total}", `${table.getPageCount()}`)}
                 </div>

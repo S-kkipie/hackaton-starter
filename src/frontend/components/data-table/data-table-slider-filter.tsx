@@ -3,6 +3,8 @@
 "use client";
 
 import type { Column } from "@tanstack/react-table";
+import type { RowData } from "@tanstack/react-table";
+import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import { PlusCircle, XCircle } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/frontend/components/ui/button";
@@ -33,12 +35,12 @@ function getIsValidRange(value: unknown): value is RangeValue {
     );
 }
 
-interface DataTableSliderFilterProps<TData> {
-    column: Column<TData, unknown>;
+interface DataTableSliderFilterProps<TData extends RowData> {
+    column: Column<TableFeaturesConfig, TData, unknown>;
     title?: string;
 }
 
-export function DataTableSliderFilter<TData>({
+export function DataTableSliderFilter<TData extends RowData>({
     column,
     title,
 }: DataTableSliderFilterProps<TData>) {

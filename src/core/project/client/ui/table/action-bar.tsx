@@ -1,6 +1,7 @@
 "use client";
 
 import type { Table } from "@tanstack/react-table";
+import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import { DownloadIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { Project } from "@/core/project/domain/types";
@@ -16,7 +17,7 @@ import { exportTableToCSV } from "@/frontend/lib/export";
 export default function ProjectTableActionBar({
     table,
 }: {
-    table: Table<Project>;
+    table: Table<TableFeaturesConfig, Project>;
 }) {
     return (
         <DataTableActionBar table={table}>

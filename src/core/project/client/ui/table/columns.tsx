@@ -1,4 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
+import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import { EllipsisIcon, TagIcon, TextIcon } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import type { Project, ProjectStatus } from "@/core/project/domain/types";
@@ -36,7 +37,7 @@ interface GetProjectTableColumnsProps {
  */
 export default function getProjectTableColumns({
     setRowAction,
-}: GetProjectTableColumnsProps): ColumnDef<Project>[] {
+}: GetProjectTableColumnsProps): ColumnDef<TableFeaturesConfig, Project>[] {
     return [
         {
             id: "select",

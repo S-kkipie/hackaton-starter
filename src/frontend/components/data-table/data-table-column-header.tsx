@@ -1,6 +1,7 @@
 "use client";
 
-import type { Column } from "@tanstack/react-table";
+import type { Column, RowData } from "@tanstack/react-table";
+import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import {
     ChevronDown,
     ChevronsUpDown,
@@ -18,13 +19,13 @@ import {
 } from "@/frontend/components/ui/dropdown-menu";
 import { cn } from "@/frontend/lib/utils";
 
-interface DataTableColumnHeaderProps<TData, TValue>
+interface DataTableColumnHeaderProps<TData extends RowData, TValue>
     extends React.ComponentProps<typeof DropdownMenuTrigger> {
-    column: Column<TData, TValue>;
+    column: Column<TableFeaturesConfig, TData, TValue>;
     title: string;
 }
 
-export function DataTableColumnHeader<TData, TValue>({
+export function DataTableColumnHeader<TData extends RowData, TValue>({
     column,
     title,
     className,
