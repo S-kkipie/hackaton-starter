@@ -11,3 +11,8 @@ test("a hosted database gets SSL; a local one or sslmode=disable does not", () =
         false,
     );
 });
+
+test("a missing or unparsable URL (build without env) keeps the default instead of throwing", () => {
+    expect(sslFor("")).toEqual({ rejectUnauthorized: false });
+    expect(sslFor("undefined")).toEqual({ rejectUnauthorized: false });
+});
