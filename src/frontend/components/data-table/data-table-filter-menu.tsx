@@ -12,7 +12,7 @@ import {
     Text,
     X,
 } from "lucide-react";
-import { useQueryState } from "nuqs";
+import { throttle, useQueryState } from "nuqs";
 import * as React from "react";
 import { DataTableRangeFilter } from "@/frontend/components/data-table/data-table-range-filter";
 import { Button } from "@/frontend/components/ui/button";
@@ -121,7 +121,7 @@ export function DataTableFilterMenu<TData extends RowData>({
             .withOptions({
                 clearOnDefault: true,
                 shallow,
-                throttleMs,
+                limitUrlUpdates: throttle(throttleMs),
             }),
     );
     const debouncedSetFilters = useDebouncedCallback(setFilters, debounceMs);
