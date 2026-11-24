@@ -1,3 +1,4 @@
+import "server-only";
 import { getLogger } from "@logtape/logtape";
 import type { APIErrorResponse } from "./api";
 import type { AppError } from "./app-error";

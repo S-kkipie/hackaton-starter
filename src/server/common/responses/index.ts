@@ -1,3 +1,5 @@
+import "server-only";
+
 export * from "./api";
 export * from "./app-error";
 export * from "./error-converter";

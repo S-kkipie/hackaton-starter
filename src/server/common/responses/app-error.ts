@@ -1,3 +1,4 @@
+import "server-only";
 import {
     API_ERROR_STATUS,
     type ServerErrorCode,

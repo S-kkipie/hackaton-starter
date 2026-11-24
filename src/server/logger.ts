@@ -1,3 +1,4 @@
+import "server-only";
 import { configure, getConsoleSink } from "@logtape/logtape";
 
 let configured = false;

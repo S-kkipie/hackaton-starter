@@ -1,3 +1,4 @@
+import "server-only";
 import { z } from "zod";
 import type { ApiErrorStatus, ApiStatus } from "./status";
 import { STATUS_MAP } from "./status";

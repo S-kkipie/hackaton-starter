@@ -1,3 +1,4 @@
+import "server-only";
 import { env } from "@/config/env";
 
 export const ServerConfig = {

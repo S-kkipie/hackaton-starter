@@ -1,3 +1,4 @@
+import "server-only";
 import { cors } from "@elysiajs/cors";
 import { openapi } from "@elysiajs/openapi";
 import { serverTiming } from "@elysiajs/server-timing";
