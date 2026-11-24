@@ -36,8 +36,12 @@ A purely read-only domain may instead export a couple of plain `useQuery` hooks.
 ## 2. Options factories, not hand-rolled keys `MAJOR`
 
 `useQuery(client.get.queryOptions())`, `useMutation(client.post.mutationOptions({ onSuccess }))`,
-`client.get.queryKey()` for invalidation. Pass `onSuccess`/`onError` **into**
-`mutationOptions({...})`. Never hand-build `queryFn`/`queryKey`/`mutationFn` when
+`client.get.queryKey()` for invalidation. Pass `onSuccess` **into**
+`mutationOptions({...})`. Error toasts are global (the QueryClient's
+`MutationCache`, `@/frontend/lib/mutation-errors`): don't add `onError: () =>
+toast.error("...")`; use `meta: { silent: true | [codes] }` when the UI shows the
+error itself, `meta.actions` for a toast button, and `apiErrorMessage(error)` /
+`toApiError(error)` (`@/frontend/lib/api-error`) to read one. Never hand-build `queryFn`/`queryKey`/`mutationFn` when
 the proxy expresses it.
 
 ## 3. Dynamic-path operations `MAJOR`
@@ -53,7 +57,7 @@ the proxy expresses it.
 Consumers read `data.response`, never `data` directly:
 `const items = listQuery.data?.response ?? [];`.
 
-## 5. Raw `apiClient` only outside hooks/components `MAJOR`
+## 5. Raw treaty client only outside hooks/components `MAJOR`
 
-`apiClient` (raw treaty) is allowed only in provider wiring. It is forbidden in a
+`createApiClient()` (raw treaty) is allowed only in provider wiring and tests. It is forbidden in a
 `.tsx` component or a `useQuery`/`useMutation` hook — those go through `useElysia()`.

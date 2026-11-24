@@ -1,5 +1,4 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import { EllipsisIcon, TagIcon, TextIcon } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import type { Project, ProjectStatus } from "@/core/project/domain/types";
@@ -15,6 +14,7 @@ import {
     DropdownMenuTrigger,
 } from "@/frontend/components/ui/dropdown-menu";
 import { formatDate } from "@/frontend/lib/format";
+import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import type { DataTableRowAction } from "@/frontend/types/data-table";
 
 const STATUS_OPTIONS: { label: string; value: ProjectStatus }[] = [

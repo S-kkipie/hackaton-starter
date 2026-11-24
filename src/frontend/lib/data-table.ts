@@ -55,7 +55,6 @@ export function getFilterOperators(filterVariant: FilterVariant) {
         boolean: dataTableConfig.booleanOperators,
         select: dataTableConfig.selectOperators,
         multiSelect: dataTableConfig.multiSelectOperators,
-        locationCascade: dataTableConfig.multiSelectOperators,
     };
 
     return operatorMap[filterVariant] ?? dataTableConfig.textOperators;

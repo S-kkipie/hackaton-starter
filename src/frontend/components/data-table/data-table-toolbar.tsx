@@ -7,7 +7,6 @@ import { Filter, X } from "lucide-react";
 import * as React from "react";
 
 import { DataTableDateFilter } from "@/frontend/components/data-table/data-table-date-filter";
-import { LocationCascadeFilter } from "@/frontend/components/data-table/data-table-location-cascade-filter";
 import { DataTableViewOptions } from "@/frontend/components/data-table/data-table-view-options";
 import { Badge } from "@/frontend/components/ui/badge";
 import { Button } from "@/frontend/components/ui/button";
@@ -287,9 +286,6 @@ function InlineFilterControl<TData extends RowData>({
 
         case "multiSelect":
             return <InlineMultiSelectFilter column={column} />;
-
-        case "locationCascade":
-            return <LocationCascadeFilter column={column} />;
 
         default:
             return null;

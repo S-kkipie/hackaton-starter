@@ -12,28 +12,6 @@ export function formatDate(
 }
 
 /**
- * Formats an ISO instant as a short Lima-time label (e.g. "sáb 12 jul, 3:00 p. m.").
- * Uses `Intl` rather than date-fns because pinning the output to `America/Lima`
- * regardless of the viewer's own timezone needs the `timeZone` option, which
- * date-fns core cannot express without the `date-fns-tz` package.
- */
-export function formatLimaDateTime(
-    date: Date | string | number | null | undefined,
-): string {
-    if (!date) return "";
-    const parsed = new Date(date);
-    if (Number.isNaN(parsed.getTime())) return "";
-    return new Intl.DateTimeFormat("es-PE", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        hour: "numeric",
-        minute: "2-digit",
-        timeZone: "America/Lima",
-    }).format(parsed);
-}
-
-/**
  * Formats a date as a Spanish relative distance from `now` with a suffix
  * (e.g. "hace 5 días", "hace alrededor de 1 mes"). Empty string for nullish or
  * unparseable input.
@@ -57,19 +35,6 @@ export function formatNumber(num: number): string {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     });
-}
-
-/**
- * Formats a `cents` amount in PEN as a localized currency string with no
- * decimals (e.g. `34900` → `"S/ 349"`).
- */
-export function formatSoles(cents: number): string {
-    return new Intl.NumberFormat("es-PE", {
-        style: "currency",
-        currency: "PEN",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    }).format(cents / 100);
 }
 
 /**

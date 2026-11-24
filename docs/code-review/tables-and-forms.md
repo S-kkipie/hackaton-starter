@@ -9,7 +9,10 @@ client filtering, or raw `useState` forms.
 Server-driven tables use `useDataTable` (`@/frontend/hooks/use-data-table`) —
 manual mode (`manualPagination/Sorting/Filtering`), state synced to the URL via
 nuqs (`page`/`perPage`/`sort` + one key per filterable column), 300ms-debounced
-filter writes. It requires `TData extends { id }` and a `pageCount`. Compose with
+filter writes (text values are kept whole; options are lists; range/date
+variants are number lists). Sort, page-size and filter changes reset to page 1;
+the filters follow the URL on back/forward. A filterable column id must not be
+`page`, `perPage`, `sort` or `filters` (the hook throws). It requires `TData extends { id }` and a `pageCount`. Compose with
 `@/frontend/components/data-table/*` (`DataTable`, `DataTableToolbar`,
 `DataTableSortList`, `DataTableActionBar`/`DataTableActionBarSelection`/
 `DataTableActionBarAction`, faceted/date/range/slider filters, pagination,
@@ -43,7 +46,10 @@ caught by the `page`-sibling `error.tsx`) instead of blocking the RSC response.
 `data-table.tsx` wires `useDataTable` (`shallow:false`) so any page/sort/filter
 change re-runs `server.tsx`. Column-level text/select filters (`meta.variant`) live
 in the `DataTableToolbar`, not a page-level search box; sorting is exposed via
-`DataTableSortList` in the toolbar rather than clickable column headers. Bulk
+`DataTableSortList` in the toolbar rather than clickable column headers. To open
+a row, pass `<DataTable onRowActivate={...}>` or `rowHref={(row) => url}`: the row
+becomes focusable and activates on click (outside its buttons/checkboxes) or
+Enter/Space. Bulk
 actions (e.g. CSV export via `@/frontend/lib/export`'s `exportTableToCSV`) live in
 `action-bar.tsx`, passed to `<DataTable actionBar={...}>`. Row actions (`update`/
 `delete`) are conditionally-rendered modals — `{rowAction?.variant === "update" &&

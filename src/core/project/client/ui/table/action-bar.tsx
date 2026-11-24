@@ -1,7 +1,6 @@
 "use client";
 
 import type { Table } from "@tanstack/react-table";
-import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import { DownloadIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { Project } from "@/core/project/domain/types";
@@ -12,6 +11,7 @@ import {
 } from "@/frontend/components/data-table/data-table-action-bar";
 import { Separator } from "@/frontend/components/ui/separator";
 import { exportTableToCSV } from "@/frontend/lib/export";
+import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 
 /** Bulk action bar shown over the projects table while rows are selected. */
 export default function ProjectTableActionBar({
