@@ -10,6 +10,8 @@ jobs:
         runs-on: ubuntu-latest
         env:
             SKIP_ENV_VALIDATION: "1"
+            # Not a secret: only keeps Better Auth from warning about its default during the build.
+            BETTER_AUTH_SECRET: ci-build-only-not-a-real-secret-0000000000
         steps:
             - uses: actions/checkout@v4
             - uses: pnpm/action-setup@v4
