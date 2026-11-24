@@ -41,7 +41,6 @@ export function DeleteProjectModal({
                 onOpenChange(false);
                 onSuccess?.();
             },
-            onError: () => toast.error("Delete failed"),
         });
     }
 
