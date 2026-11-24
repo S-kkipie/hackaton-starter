@@ -1,3 +1,4 @@
+import "server-only";
 export const STATUS_MAP = {
     200: "OK",
     201: "CREATED",

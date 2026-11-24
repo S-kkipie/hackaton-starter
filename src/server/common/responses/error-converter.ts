@@ -1,3 +1,4 @@
+import "server-only";
 import { getLogger } from "@logtape/logtape";
 import type { APIErrorResponse } from "./api";
 import type { AppError } from "./app-error";
@@ -34,6 +35,8 @@ export const errorToResponse = (error: AppError): APIErrorResponse => {
     return {
         code: error.code,
         status: error.status,
-        targets: "targets" in error ? error.targets : undefined,
+        ...("targets" in error && error.targets?.length
+            ? { targets: error.targets }
+            : {}),
     };
 };

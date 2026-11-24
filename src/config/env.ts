@@ -15,4 +15,6 @@ export const env = createEnv({
         NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     },
     emptyStringAsUndefined: true,
+    // CI builds and image builds have no secrets; the running app still validates.
+    skipValidation: process.env.SKIP_ENV_VALIDATION === "1",
 });

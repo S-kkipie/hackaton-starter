@@ -37,7 +37,6 @@ export function CreateProjectModal({
                     toast.success("Project created");
                     onOpenChange(false);
                 },
-                onError: () => toast.error("Create failed"),
             },
         );
     }

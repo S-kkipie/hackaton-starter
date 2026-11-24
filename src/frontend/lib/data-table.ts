@@ -1,5 +1,4 @@
-import type { Column } from "@tanstack/react-table";
-import type { RowData } from "@tanstack/react-table";
+import type { Column, RowData } from "@tanstack/react-table";
 import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
 import type {
     ExtendedColumnFilter,
@@ -8,35 +7,38 @@ import type {
 } from "@/frontend/types/data-table";
 import { dataTableConfig } from "./data-table-config";
 
+/**
+ * Inline styles of a pinned column's cells: sticky at its offset, with an edge
+ * shadow on the last start-pinned / first end-pinned column when `withBorder`.
+ * Unpinned columns get none, so row hover and selection colors show through
+ * (widths come from the table's `<colgroup>`).
+ */
 export function getCommonPinningStyles<TData extends RowData>({
     column,
     withBorder = false,
 }: {
     column: Column<TableFeaturesConfig, TData>;
     withBorder?: boolean;
-}): React.CSSProperties {
+}): React.CSSProperties | undefined {
     const isPinned = column.getIsPinned();
-    const isLastLeftPinnedColumn =
+    if (!isPinned) return undefined;
+    const isLastStartPinned =
         isPinned === "start" && column.getIsLastColumn("start");
-    const isFirstRightPinnedColumn =
+    const isFirstEndPinned =
         isPinned === "end" && column.getIsFirstColumn("end");
 
     return {
+        position: "sticky",
+        left: isPinned === "start" ? column.getStart("start") : undefined,
+        right: isPinned === "end" ? column.getAfter("end") : undefined,
+        zIndex: 1,
         boxShadow: withBorder
-            ? isLastLeftPinnedColumn
+            ? isLastStartPinned
                 ? "-4px 0 4px -4px var(--border) inset"
-                : isFirstRightPinnedColumn
+                : isFirstEndPinned
                   ? "4px 0 4px -4px var(--border) inset"
                   : undefined
             : undefined,
-        left: isPinned === "start" ? `${column.getStart("start")}px` : undefined,
-        right:
-            isPinned === "end" ? `${column.getAfter("end")}px` : undefined,
-        opacity: isPinned ? 0.97 : 1,
-        position: isPinned ? "sticky" : "relative",
-        background: "var(--background)",
-        width: column.getSize(),
-        zIndex: isPinned ? 1 : 0,
     };
 }
 
@@ -53,7 +55,6 @@ export function getFilterOperators(filterVariant: FilterVariant) {
         boolean: dataTableConfig.booleanOperators,
         select: dataTableConfig.selectOperators,
         multiSelect: dataTableConfig.multiSelectOperators,
-        locationCascade: dataTableConfig.multiSelectOperators,
     };
 
     return operatorMap[filterVariant] ?? dataTableConfig.textOperators;

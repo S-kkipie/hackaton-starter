@@ -48,6 +48,24 @@ Wire rules: every response is the `CommonResponse` envelope
 (`{ response?, code, status }`); expected 4xx are `err(AppErrors.x)` values, not
 throws; authed routes carry both `.use(authed)` and `authed: true`.
 
+### Errors
+
+- **Envelope:** an error answers `{ code, status, targets? }` with that HTTP
+  status. The codes and their statuses live in one catalog,
+  `src/core/common/api-errors.ts`, shared by server and client; `AppError` is
+  derived from it.
+- **Routes** return `respond(result, 200 | 201)` and declare
+  `response: { 200: successResponseSchema(...), ...errorResponses }`.
+- **Router-level:** an unknown `/api/v1` route is `404 NOT_FOUND`; a zod/Elysia
+  validation error or unparseable JSON is `400 INVALID_BODY` with the field
+  paths in `targets`; anything else is logged and answers
+  `500 INTERNAL_SERVER_ERROR`. Better Auth only owns `/api/v1/auth/*`.
+- **Client:** `toApiError` / `apiErrorMessage` (`src/frontend/lib/api-error.ts`)
+  turn any thrown value into a catalog code and its message. The QueryClient's
+  `MutationCache` toasts every failed mutation once, so hooks and modals do not
+  write their own `onError` toasts; opt out with `meta: { silent: true }` (or a
+  list of codes), or add a toast button with `meta.actions`.
+
 ### Add a new domain
 
 Clone `src/core/project/` → `src/core/<domain>/`, add a
@@ -61,10 +79,17 @@ Regenerate + apply migrations: `pnpm db:generate && pnpm db:migrate`.
 `pnpm dev | build | start` · `pnpm test` · `pnpm check` (Biome) ·
 `pnpm typecheck` · `pnpm db:generate | db:migrate | db:studio`.
 
+CI (`.github/workflows/ci.yml`) runs install, `check`, `typecheck`, `test` and
+`build` on every PR and push to `main`, with `SKIP_ENV_VALIDATION=1` (the env
+schema is skipped only when that variable is `1`; the running app validates).
+
 ## Known notes
 
 - OpenAPI (Scalar) is dev-only at `/api/v1/openapi`.
-- `eden-tanstack-react-query` is at `^0.1.10`; if a proxy typing breaks after an
+- In the browser the API client calls `window.location.origin`, so preview
+  deployments and LAN access stay same-origin; server-side it uses
+  `NEXT_PUBLIC_APP_URL`.
+- `eden-tanstack-react-query` is at `^0.2.0`; if a proxy typing breaks after an
   upgrade, pin it.
 - Better Auth UI components were installed via `pnpm dlx shadcn@latest add https://better-auth-ui.com/r/auth.json`
   and are vendored (editable) under `src/frontend/components/auth/`.

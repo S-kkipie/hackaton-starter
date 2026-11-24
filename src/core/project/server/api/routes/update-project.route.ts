@@ -6,26 +6,17 @@ import {
 } from "@/core/project/domain/schemas";
 import { authed } from "@/server/auth/middleware/authed";
 import {
-    CommonResponse,
-    errorResponseSchema,
-    errorToResponse,
+    errorResponses,
+    respond,
     successResponseSchema,
 } from "@/server/common/responses";
 import { updateProjectService } from "../../services/update-project-service";
 
 export const updateProjectRoute = new Elysia().use(authed).put(
     "/:id",
-    async ({ user, params, body, status }) => {
+    async ({ user, params, body }) => {
         const result = await updateProjectService(user.id, params.id, body);
-        if (!result.ok)
-            return status(
-                result.error.status as 400 | 404 | 500,
-                errorToResponse(result.error),
-            );
-        return status(
-            200,
-            CommonResponse.successful({ response: result.data }),
-        );
+        return respond(result, 200);
     },
     {
         authed: true,
@@ -33,9 +24,7 @@ export const updateProjectRoute = new Elysia().use(authed).put(
         body: updateProjectSchema,
         response: {
             200: successResponseSchema(projectSchema, "Project"),
-            400: errorResponseSchema(400),
-            404: errorResponseSchema(404),
-            500: errorResponseSchema(500),
+            ...errorResponses,
         },
         detail: { tags: ["Projects"], summary: "Update a project by id" },
     },

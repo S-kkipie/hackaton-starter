@@ -42,7 +42,6 @@ export function UpdateProjectModal({
                     toast.success("Project updated");
                     onOpenChange(false);
                 },
-                onError: () => toast.error("Update failed"),
             },
         );
     }

@@ -61,7 +61,6 @@ export const dataTableConfig = {
         "boolean",
         "select",
         "multiSelect",
-        "locationCascade",
     ] as const,
     operators: [
         "iLike",

@@ -4,9 +4,9 @@ import type {
     RowData,
     TableFeatures,
 } from "@tanstack/react-table";
-import type { TableFeaturesConfig } from "../lib/table-features";
 import type { DataTableConfig } from "../lib/data-table-config";
 import type { FilterItemSchema } from "../lib/parsers";
+import type { TableFeaturesConfig } from "../lib/table-features";
 
 declare module "@tanstack/react-table" {
     interface ColumnMeta<
@@ -21,7 +21,6 @@ declare module "@tanstack/react-table" {
         range?: [number, number];
         unit?: string;
         icon?: React.FC<React.SVGProps<SVGSVGElement>>;
-        locationTree?: Record<string, Record<string, string[]>>;
     }
 }
 
@@ -36,11 +35,13 @@ export type FilterOperator = DataTableConfig["operators"][number];
 export type FilterVariant = DataTableConfig["filterVariants"][number];
 export type JoinOperator = DataTableConfig["joinOperators"][number];
 
-export interface ExtendedColumnSort<TData extends RowData> extends Omit<ColumnSort, "id"> {
+export interface ExtendedColumnSort<TData extends RowData>
+    extends Omit<ColumnSort, "id"> {
     id: Extract<keyof TData, string>;
 }
 
-export interface ExtendedColumnFilter<TData extends RowData> extends FilterItemSchema {
+export interface ExtendedColumnFilter<TData extends RowData>
+    extends FilterItemSchema {
     id: Extract<keyof TData, string>;
 }
 
