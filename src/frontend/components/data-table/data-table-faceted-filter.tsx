@@ -1,11 +1,9 @@
-/** biome-ignore-all lint/a11y/useKeyWithClickEvents: falsePositive */
-/** biome-ignore-all lint/a11y/useSemanticElements: falsePositive */
 "use client";
 
 import type { Column } from "@tanstack/react-table";
 import type { RowData } from "@tanstack/react-table";
 import type { TableFeaturesConfig } from "@/frontend/lib/table-features";
-import { Check, PlusCircle, XCircle } from "lucide-react";
+import { Check, PlusCircle, X } from "lucide-react";
 import * as React from "react";
 
 import { Badge } from "@/frontend/components/ui/badge";
@@ -74,32 +72,29 @@ export function DataTableFacetedFilter<TData extends RowData, TValue>({
     );
 
     const onReset = React.useCallback(
-        (event?: React.MouseEvent) => {
-            event?.stopPropagation();
+        () => {
             column?.setFilterValue(undefined);
         },
         [column],
     );
 
+    const hasSelection = selectedValues.size > 0;
+
     return (
+        <div className="flex items-center">
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="border-dashed">
-                    {selectedValues?.size > 0 ? (
-                        <div
-                            role="button"
-                            aria-label={`Clear ${title} filter`}
-                            tabIndex={0}
-                            onClick={onReset}
-                            className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        >
-                            <XCircle />
-                        </div>
-                    ) : (
-                        <PlusCircle />
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                        "border-dashed",
+                        hasSelection && "rounded-r-none",
                     )}
+                >
+                    <PlusCircle />
                     {title}
-                    {selectedValues?.size > 0 && (
+                    {hasSelection && (
                         <>
                             <Separator
                                 orientation="vertical"
@@ -155,6 +150,7 @@ export function DataTableFacetedFilter<TData extends RowData, TValue>({
                                 return (
                                     <CommandItem
                                         key={option.value}
+                                        value={option.label}
                                         onSelect={() =>
                                             onItemSelect(option, isSelected)
                                         }
@@ -199,5 +195,17 @@ export function DataTableFacetedFilter<TData extends RowData, TValue>({
                 </Command>
             </PopoverContent>
         </Popover>
+            {hasSelection ? (
+                <Button
+                    variant="outline"
+                    size="icon-sm"
+                    className="rounded-l-none border-l-0 border-dashed"
+                    aria-label={`Quitar filtro ${title ?? ""}`.trim()}
+                    onClick={() => onReset()}
+                >
+                    <X />
+                </Button>
+            ) : null}
+        </div>
     );
 }
