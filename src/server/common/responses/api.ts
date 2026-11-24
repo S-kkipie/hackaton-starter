@@ -27,7 +27,9 @@ export type APIErrorResponse<C extends string = string> = {
 
 type SuccessfulParams<T, C extends string = "OK"> = { response?: T; code?: C };
 
-export const errorResponseSchema = (status: ApiErrorStatus = 500) =>
+export const errorResponseSchema = <S extends ApiErrorStatus = 500>(
+    status: S = 500 as S,
+) =>
     z
         .object({
             code: z.string().describe(`example: ${STATUS_MAP[status]}`),
@@ -38,6 +40,18 @@ export const errorResponseSchema = (status: ApiErrorStatus = 500) =>
                 .describe('example: ["name"]'),
         })
         .describe("ErrorResponse");
+
+/** The error envelope schema for every error status a service result can carry (spread into a route's `response`). */
+export const errorResponses = {
+    400: errorResponseSchema(400),
+    401: errorResponseSchema(401),
+    403: errorResponseSchema(403),
+    404: errorResponseSchema(404),
+    409: errorResponseSchema(409),
+    422: errorResponseSchema(422),
+    429: errorResponseSchema(429),
+    500: errorResponseSchema(500),
+};
 
 export const successResponseSchema = <T extends z.ZodTypeAny>(
     dataSchema: T,
